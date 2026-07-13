@@ -50,9 +50,16 @@
             font-size: 14px;
         }
 
-        .progress-info {
+        .time-info {
             background: rgba(255, 215, 0, 0.2);
             border: 1px solid #FFD700;
+            color: #FFD700;
+        }
+
+        .speed-boost-indicator {
+            background: rgba(255, 165, 0, 0.3);
+            border: 1px solid #FFA500;
+            color: #FFA500;
         }
 
         .main-menu {
@@ -90,6 +97,20 @@
             background: rgba(0,0,0,0.4);
             padding: 6px 16px;
             border-radius: 20px;
+        }
+
+        .stats-info {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 15px;
+            color: white;
+            font-size: 14px;
         }
 
         .daily-reward {
@@ -325,6 +346,53 @@
             text-align: center;
         }
 
+        .key-binding {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 400px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin: 10px;
+        }
+
+        .key-binding-title {
+            color: #FFD700;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .key-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .key-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            min-width: 80px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .key-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .key-btn.listening {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
+            animation: pulse 1s infinite;
+        }
+
         .shop-close, .settings-close {
             padding: 8px 25px;
             font-size: 14px;
@@ -415,22 +483,27 @@
             <div class="menu-subtitle">مرحله مورد نظرت رو انتخاب کن</div>
             <div class="menu-coins" id="menuCoins">🪙 سکه: 0</div>
             
+            <div class="stats-info">
+                <div class="stat-box">💀 مرگ‌ها: <span id="totalDeaths">0</span></div>
+                <div class="stat-box">⭐ ستاره‌ها: <span id="totalStars">0</span></div>
+            </div>
+            
             <div class="daily-reward" id="dailyReward" onclick="claimDailyReward()">
                 🎁 جایزه ورود روزانه: <span id="dailyRewardAmount">1</span> سکه
             </div>
             
             <div class="season-selector">
                 <button class="season-btn active" onclick="switchSeason(1)" id="season1Btn">فصل ۱</button>
-                <button class="season-btn" onclick="switchSeason(2)" id="season2Btn">فصل ۲</button>
+                <button class="season-btn" onclick="switchSeason(2)" id="season2Btn">فصل </button>
             </div>
             
             <div class="menu-buttons">
-                <button class="menu-btn shop-btn" onclick="openShop()">🛒 فروشگاه</button>
-                <button class="menu-btn settings-btn" onclick="openSettings()">⚙️ تنظیمات</button>
+                <button class="menu-btn shop-btn" onclick="openShop()"> فروشگاه</button>
+                <button class="menu-btn settings-btn" onclick="openSettings()">️ تنظیمات</button>
             </div>
             <div class="menu-levels" id="menuLevels"></div>
             <button class="reset-btn" onclick="resetProgress()">🔄 پاک کردن پیشرفت</button>
-            <div class="menu-instructions">← → حرکت | Space یا کلیک برای پرش</div>
+            <div class="menu-instructions" id="menuInstructions">← → حرکت | Space یا کلیک برای پرش</div>
         </div>
 
         <div class="shop-overlay hidden" id="shopOverlay">
@@ -444,7 +517,7 @@
             <div class="settings-title">⚙️ تنظیمات</div>
             
             <div class="setting-item">
-                <span class="setting-label"> صدای موزیک</span>
+                <span class="setting-label">🎵 صدای موزیک</span>
                 <input type="range" class="volume-slider" id="musicVolume" min="0" max="100" value="50">
                 <span class="volume-value" id="musicVolumeValue">50%</span>
             </div>
@@ -454,15 +527,32 @@
                 <input type="range" class="volume-slider" id="sfxVolume" min="0" max="100" value="70">
                 <span class="volume-value" id="sfxVolumeValue">70%</span>
             </div>
+
+            <div class="key-binding">
+                <div class="key-binding-title">🎮 تغییر کلیدهای بازی</div>
+                <div class="key-row">
+                    <span>حرکت به راست:</span>
+                    <button class="key-btn" id="keyRight" onclick="changeKey('right')">ArrowRight</button>
+                </div>
+                <div class="key-row">
+                    <span>حرکت به چپ:</span>
+                    <button class="key-btn" id="keyLeft" onclick="changeKey('left')">ArrowLeft</button>
+                </div>
+                <div class="key-row">
+                    <span>پرش:</span>
+                    <button class="key-btn" id="keyJump" onclick="changeKey('jump')">Space</button>
+                </div>
+            </div>
             
             <button class="settings-close" onclick="closeSettings()">بستن</button>
         </div>
 
         <div class="ui-overlay" id="gameUI" style="display: none;">
             <div class="level-info" id="levelInfo">مرحله: </div>
-            <div class="level-info progress-info" id="progressInfo">پیشرفت: 0%</div>
+            <div class="level-info time-info" id="timeInfo">زمان: <span id="timer">0</span>s</div>
             <div class="level-info" id="scoreInfo">امتیاز: 0</div>
             <div class="level-info" id="coinInfo">🪙 سکه: 0</div>
+            <div class="level-info speed-boost-indicator" id="speedBoostInfo" style="display: none;">⚡ اسپید: <span id="speedBoostTimer">0</span>s</div>
         </div>
 
         <button class="back-btn" id="backBtn" style="display: none;" onclick="showMainMenu()">🏠 منوی اصلی</button>
@@ -499,12 +589,16 @@
         let levelWidth = 0;
         let gameTime = 0;
         let currentSeason = 1;
+        let levelTime = 0;
 
-        // ✅ تنظیمات صدا
         let musicVolume = 0.5;
         let sfxVolume = 0.7;
         let currentMusicOscillators = [];
         let musicInterval = null;
+
+        let speedBoostActive = false;
+        let speedBoostTimer = 0;
+        let speedBoostDuration = 300;
 
         let particles = [];
 
@@ -515,38 +609,50 @@
         let completedLevelsData = {};
         for (let i = 0; i < TOTAL_LEVELS; i++) {
             levelProgress[i] = i === 0 ? 'current' : 'locked';
-            completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+            completedLevelsData[i] = { completed: false, coinsCollected: 0, bestTime: null, stars: 0 };
         }
+
+        let gameStats = {
+            totalDeaths: 0,
+            totalStars: 0
+        };
 
         let ownedSkins = ['default'];
         let equippedSkin = 'default';
         let playerColor = '#FFFFFF';
 
-        // ✅ سیستم جایزه روزانه
         let dailyRewardData = {
             lastClaimDate: null,
             streak: 0
         };
 
+        let keyBindings = {
+            right: 'ArrowRight',
+            left: 'ArrowLeft',
+            jump: 'Space'
+        };
+
+        let listeningForKey = null;
+
         const skins = [
-            { id: 'redhat', name: 'کلاه قرمز', price: 25, emoji: '🎩' },
+            { id: 'redhat', name: 'کلاه قرمز', price: 25, emoji: '' },
             { id: 'sunglasses', name: 'عینک آفتابی', price: 40, emoji: '🕶️' },
             { id: 'crown', name: 'تاج طلایی', price: 53, emoji: '👑' },
-            { id: 'argentina', name: 'لباس آرژانتین', price: 10, emoji: '🇦🇷' }
+            { id: 'argentina', name: 'لباس آرژانتین', price: 10, emoji: '🇦🇷' },
+            { id: 'astronaut', name: 'فضانورد', price: 30, emoji: '‍🚀' }
         ];
 
         const playerColors = [
-            { id: 'color_white', name: 'سفید', color: '#FFFFFF', price: 0, emoji: '⚪' },
+            { id: 'color_white', name: 'سفید', color: '#FFFFFF', price: 0, emoji: '' },
             { id: 'color_blue', name: 'آبی', color: '#3498DB', price: 15, emoji: '🔵' },
             { id: 'color_green', name: 'سبز', color: '#2ECC71', price: 15, emoji: '🟢' },
-            { id: 'color_yellow', name: 'زرد', color: '#F1C40F', price: 15, emoji: '' },
+            { id: 'color_yellow', name: 'زرد', color: '#F1C40F', price: 15, emoji: '🟡' },
             { id: 'color_purple', name: 'بنفش', color: '#9B59B6', price: 15, emoji: '🟣' },
-            { id: 'color_orange', name: 'نارنجی', color: '#E67E22', price: 15, emoji: '' }
+            { id: 'color_orange', name: 'نارنجی', color: '#E67E22', price: 15, emoji: '🟠' }
         ];
 
         let audioCtx = null;
 
-        // ✅ تابع تبدیل اعداد به فارسی - اصلاح شده
         function toPersianNumber(num) {
             const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
             return num.toString().split('').map(digit => {
@@ -555,7 +661,6 @@
             }).join('');
         }
 
-        // ✅ سیستم صوتی پیشرفته با موسیقی متفاوت برای هر فصل
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -565,17 +670,14 @@
 
         function playSeasonMusic(season) {
             if (!audioCtx) return;
-            
-            // ✅ توقف موسیقی قبلی قبل از پخش جدید
             stopMusic();
             
-            // فرکانس‌های مختلف برای هر فصل
-            const seasonFrequencies = {
-                1: [261.63, 329.63, 392.00], // C Major - فصل 1
-                2: [293.66, 349.23, 440.00]  // D Major - فصل 2
-            };
+            const seasonFrequencies = season === 2 ? 
+                [440, 493.88, 523.25, 587.33] :
+                [261.63, 329.63, 392.00];
             
-            const frequencies = seasonFrequencies[season] || seasonFrequencies[1];
+            const tempo = season === 2 ? 300 : 500;
+            
             let noteIndex = 0;
             
             function playNextNote() {
@@ -586,32 +688,29 @@
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(frequencies[noteIndex], audioCtx.currentTime);
+                osc.type = season === 2 ? 'sawtooth' : 'sine';
+                osc.frequency.setValueAtTime(seasonFrequencies[noteIndex], audioCtx.currentTime);
                 
                 gain.gain.setValueAtTime(musicVolume * 0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                 
                 osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + 0.5);
+                osc.stop(audioCtx.currentTime + 0.3);
                 
                 currentMusicOscillators.push(osc);
-                noteIndex = (noteIndex + 1) % frequencies.length;
+                noteIndex = (noteIndex + 1) % seasonFrequencies.length;
             }
             
-            // پخش نت‌ها هر 500 میلی‌ثانیه
-            musicInterval = setInterval(playNextNote, 500);
-            playNextNote(); // پخش اولین نت بلافاصله
+            musicInterval = setInterval(playNextNote, tempo);
+            playNextNote();
         }
 
         function stopMusic() {
-            // ✅ توقف interval
             if (musicInterval) {
                 clearInterval(musicInterval);
                 musicInterval = null;
             }
             
-            // ✅ توقف همه oscillators
             currentMusicOscillators.forEach(osc => {
                 try {
                     osc.stop();
@@ -645,6 +744,13 @@
                     gain.gain.setValueAtTime(volume * 0.3, now);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
                     osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'speedboost') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
                 } else if (type === 'death') {
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(200, now);
@@ -714,19 +820,16 @@
             ctx.globalAlpha = 1;
         }
 
-        // ✅ مدیریت جایزه روزانه
         function checkDailyReward() {
             const today = new Date().toDateString();
             const rewardBtn = document.getElementById('dailyReward');
             const rewardAmount = document.getElementById('dailyRewardAmount');
             
             if (dailyRewardData.lastClaimDate === today) {
-                // امروز جایزه رو گرفتی
                 rewardBtn.classList.add('claimed');
                 rewardBtn.innerHTML = '✅ جایزه امروز رو گرفتی!';
                 rewardBtn.onclick = null;
             } else {
-                // محاسبه جایزه بر اساس streak
                 const rewards = [1, 2, 3, 4, 10];
                 const reward = rewards[dailyRewardData.streak % 5];
                 rewardAmount.textContent = toPersianNumber(reward);
@@ -755,7 +858,7 @@
             checkDailyReward();
             updateUI();
             
-            showMessage('🎁 جایزه روزانه!', `تبریک! ${toPersianNumber(reward)} سکه گرفتی! `, 'متوجه شدم', () => {
+            showMessage('🎁 جایزه روزانه!', `تبریک! ${toPersianNumber(reward)} سکه گرفتی! 🪙`, 'متوجه شدم', () => {
                 hideMessage();
             });
         }
@@ -773,11 +876,13 @@
                     playerColor = data.playerColor || '#FFFFFF';
                     currentSeason = data.currentSeason || 1;
                     dailyRewardData = data.dailyRewardData || { lastClaimDate: null, streak: 0 };
+                    keyBindings = data.keyBindings || keyBindings;
+                    gameStats = data.gameStats || { totalDeaths: 0, totalStars: 0 };
                     
                     if (data.completedLevelsData) {
                         for (let i = 0; i < TOTAL_LEVELS; i++) {
                             if (!data.completedLevelsData[i]) {
-                                data.completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+                                data.completedLevelsData[i] = { completed: false, coinsCollected: 0, bestTime: null, stars: 0 };
                             }
                         }
                         completedLevelsData = data.completedLevelsData;
@@ -789,15 +894,16 @@
                         }
                     }
 
-                    // ✅ بارگذاری تنظیمات صدا
                     musicVolume = data.musicVolume !== undefined ? data.musicVolume : 0.5;
                     sfxVolume = data.sfxVolume !== undefined ? data.sfxVolume : 0.7;
                     
-                    // آپدیت اسلایدرها
                     document.getElementById('musicVolume').value = musicVolume * 100;
                     document.getElementById('sfxVolume').value = sfxVolume * 100;
                     document.getElementById('musicVolumeValue').textContent = Math.round(musicVolume * 100) + '%';
                     document.getElementById('sfxVolumeValue').textContent = Math.round(sfxVolume * 100) + '%';
+                    
+                    updateKeyDisplay();
+                    updateMenuStats();
                     
                 } catch (e) {
                     console.log('خطا در بارگذاری:', e);
@@ -809,7 +915,7 @@
             localStorage.setItem('jumpGameProgress', JSON.stringify({
                 levelProgress, score, totalCoins, completedLevelsData,
                 ownedSkins, equippedSkin, playerColor, currentSeason,
-                dailyRewardData, musicVolume, sfxVolume
+                dailyRewardData, musicVolume, sfxVolume, keyBindings, gameStats
             }));
         }
 
@@ -820,7 +926,7 @@
                 completedLevelsData = {};
                 for (let i = 0; i < TOTAL_LEVELS; i++) {
                     levelProgress[i] = i === 0 ? 'current' : 'locked';
-                    completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+                    completedLevelsData[i] = { completed: false, coinsCollected: 0, bestTime: null, stars: 0 };
                 }
                 score = 0; totalCoins = 0;
                 ownedSkins = ['default'];
@@ -828,6 +934,8 @@
                 playerColor = '#FFFFFF';
                 currentSeason = 1;
                 dailyRewardData = { lastClaimDate: null, streak: 0 };
+                keyBindings = { right: 'ArrowRight', left: 'ArrowLeft', jump: 'Space' };
+                gameStats = { totalDeaths: 0, totalStars: 0 };
                 buildMainMenu();
             }
         }
@@ -837,7 +945,6 @@
             document.getElementById('season1Btn').classList.toggle('active', season === 1);
             document.getElementById('season2Btn').classList.toggle('active', season === 2);
             
-            // ✅ تغییر موسیقی هنگام تغییر فصل
             if (audioCtx && (gameState === 'menu' || gameState === 'playing')) {
                 playSeasonMusic(season);
             }
@@ -861,15 +968,71 @@
         function openSettings() {
             document.getElementById('mainMenu').classList.add('hidden');
             document.getElementById('settingsOverlay').classList.remove('hidden');
+            updateKeyDisplay();
         }
 
         function closeSettings() {
             document.getElementById('settingsOverlay').classList.add('hidden');
             document.getElementById('mainMenu').classList.remove('hidden');
             saveProgress();
+            updateMenuInstructions();
         }
 
-        // ✅ کنترل صدای موزیک و افکت‌ها
+        function changeKey(action) {
+            const btn = document.getElementById('key' + action.charAt(0).toUpperCase() + action.slice(1));
+            
+            if (listeningForKey) {
+                const prevBtn = document.getElementById('key' + listeningForKey.charAt(0).toUpperCase() + listeningForKey.slice(1));
+                if (prevBtn) prevBtn.classList.remove('listening');
+            }
+            
+            listeningForKey = action;
+            btn.classList.add('listening');
+            btn.textContent = 'کلید را فشار دهید...';
+            
+            const handler = (e) => {
+                e.preventDefault();
+                const newKey = e.code;
+                
+                keyBindings[action] = newKey;
+                btn.textContent = newKey;
+                btn.classList.remove('listening');
+                
+                listeningForKey = null;
+                document.removeEventListener('keydown', handler);
+                
+                saveProgress();
+            };
+            
+            document.addEventListener('keydown', handler);
+        }
+
+        function updateKeyDisplay() {
+            document.getElementById('keyRight').textContent = keyBindings.right;
+            document.getElementById('keyLeft').textContent = keyBindings.left;
+            document.getElementById('keyJump').textContent = keyBindings.jump;
+        }
+
+        function updateMenuInstructions() {
+            const rightKey = keyBindings.right.replace('Arrow', '');
+            const leftKey = keyBindings.left.replace('Arrow', '');
+            const jumpKey = keyBindings.jump === 'Space' ? 'Space' : keyBindings.jump;
+            document.getElementById('menuInstructions').textContent = `${leftKey} ${rightKey} حرکت | ${jumpKey} یا کلیک برای پرش`;
+        }
+
+        function updateMenuStats() {
+            document.getElementById('totalDeaths').textContent = toPersianNumber(gameStats.totalDeaths);
+            
+            let totalStars = 0;
+            for (let i = 0; i < TOTAL_LEVELS; i++) {
+                if (completedLevelsData[i] && completedLevelsData[i].stars) {
+                    totalStars += completedLevelsData[i].stars;
+                }
+            }
+            gameStats.totalStars = totalStars;
+            document.getElementById('totalStars').textContent = toPersianNumber(totalStars);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const musicSlider = document.getElementById('musicVolume');
             const sfxSlider = document.getElementById('sfxVolume');
@@ -906,7 +1069,6 @@
 
                 let statusText = isEquipped ? '✅ انتخاب شده' : isOwned ? '👕 انتخاب کن' : '🛒 خرید';
 
-                // ✅ نمایش صحیح قیمت
                 item.innerHTML = `
                     <div class="item-preview">${skin.emoji}</div>
                     <div class="item-name">${skin.name}</div>
@@ -925,9 +1087,8 @@
                 if (isEquipped) item.classList.add('equipped');
                 else if (isOwned) item.classList.add('owned');
 
-                let statusText = isEquipped ? '✅ انتخاب شده' : isOwned ? ' انتخاب کن' : '🛒 خرید';
+                let statusText = isEquipped ? '✅ انتخاب شده' : isOwned ? '🎨 انتخاب کن' : '🛒 خرید';
 
-                // ✅ نمایش صحیح قیمت
                 item.innerHTML = `
                     <div class="item-preview"><span style="color:${colorOpt.color}; font-size: 40px;">●</span></div>
                     <div class="item-name">${colorOpt.name}</div>
@@ -994,7 +1155,6 @@
             isJumping: false, isDead: false,
             deathTimer: 0, facingRight: true,
             animFrame: 0, onIce: false,
-            // ✅ برای انیمیشن نرم‌تر
             targetVx: 0,
             smoothVx: 0
         };
@@ -1013,6 +1173,9 @@
                     { x: 800, y: GROUND_Y - 100, radius: 8, collected: false },
                     { x: 1000, y: GROUND_Y - 130, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 30,
                 goal: { x: 1100, y: GROUND_Y - 50, width: 40, height: 50 }
             },
             {
@@ -1036,6 +1199,9 @@
                     { x: 1150, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1400, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 40,
                 goal: { x: 1500, y: GROUND_Y - 50, width: 40, height: 50 }
             },
             {
@@ -1057,6 +1223,9 @@
                     { x: 1200, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1500, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 45,
                 goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 900, width: 150, depth: 230, leftSlope: { x: 900, width: 50 }, rightSlope: { x: 1000, width: 50 } }
             },
@@ -1071,6 +1240,9 @@
                     { x: 1000, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1200, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 35,
                 goal: { x: 1300, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 500, pivotY: 0, ropeLength: 220, ballRadius: 40, swingAngle: Math.PI / 3, speed: 0.025, phase: 0 },
@@ -1087,6 +1259,9 @@
                     { x: 1000, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 35,
                 goal: { x: 1300, y: GROUND_Y - 50, width: 40, height: 50 },
                 rollingBalls: [
                     { startX: 200, endX: 900, y: GROUND_Y - 5, radius: 55, speed: 3.5, direction: 1, currentX: 200, rotation: 0 }
@@ -1115,6 +1290,9 @@
                     { x: 1150, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1500, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 45,
                 goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 450, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.03, phase: 0 },
@@ -1141,6 +1319,9 @@
                     { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1400, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 40,
                 goal: { x: 1400, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 350, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: 0 },
@@ -1168,6 +1349,9 @@
                     { x: 1600, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1850, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 50,
                 goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 700, width: 150, depth: 230, leftSlope: { x: 700, width: 50 }, rightSlope: { x: 800, width: 50 } },
                 rollingBalls: [
@@ -1198,6 +1382,9 @@
                     { x: 1300, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1600, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 45,
                 goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 350, pivotY: 0, ropeLength: 180, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
@@ -1232,6 +1419,9 @@
                     { x: 1800, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 2050, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 55,
                 goal: { x: 2100, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
                 pendulums: [
@@ -1264,6 +1454,9 @@
                     { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1500, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 45,
                 goal: { x: 1600, y: GROUND_Y - 50, width: 40, height: 50 }
             },
             {
@@ -1287,6 +1480,9 @@
                     { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1450, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 40,
                 goal: { x: 1500, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 300, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.3, speed: 0.032, phase: 0 },
@@ -1317,6 +1513,9 @@
                     { x: 1550, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1800, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 50,
                 goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
                 rollingBalls: [
@@ -1328,9 +1527,13 @@
                 name: 'مرحله ' + toPersianNumber(14), desc: 'آونگ‌های متعدد', width: 2000,
                 platforms: [
                     { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 400, y: GROUND_Y, width: 100, height: GROUND_HEIGHT },
                     { x: 500, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 800, y: GROUND_Y, width: 100, height: GROUND_HEIGHT },
                     { x: 900, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1200, y: GROUND_Y, width: 100, height: GROUND_HEIGHT },
                     { x: 1300, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1600, y: GROUND_Y, width: 100, height: GROUND_HEIGHT },
                     { x: 1700, y: GROUND_Y, width: 300, height: GROUND_HEIGHT }
                 ],
                 obstacles: [
@@ -1349,6 +1552,11 @@
                     { x: 1750, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1900, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [
+                    { x: 850, y: GROUND_Y - 50, width: 30, height: 30, collected: false }
+                ],
+                movingPlatforms: [],
+                timeChallenge: 50,
                 goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 350, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
@@ -1378,6 +1586,9 @@
                     { x: 1500, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 1850, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 50,
                 goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 400, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.033, phase: 0 },
@@ -1409,6 +1620,9 @@
                     { x: 1700, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 1900, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 50,
                 goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
                 pendulums: [
@@ -1444,6 +1658,9 @@
                     { x: 1900, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 2100, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 55,
                 goal: { x: 2100, y: GROUND_Y - 50, width: 40, height: 50 },
                 rollingBalls: [
                     { startX: 650, endX: 950, y: GROUND_Y - 5, radius: 50, speed: 3.3, direction: 1, currentX: 650, rotation: 0 },
@@ -1481,6 +1698,9 @@
                     { x: 1800, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 2100, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 60,
                 goal: { x: 2300, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 600, width: 100, depth: 230, leftSlope: { x: 600, width: 40 }, rightSlope: { x: 660, width: 40 } },
                 pendulums: [
@@ -1526,6 +1746,9 @@
                     { x: 2000, y: GROUND_Y - 150, radius: 8, collected: false },
                     { x: 2250, y: GROUND_Y - 120, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [],
+                timeChallenge: 60,
                 goal: { x: 2300, y: GROUND_Y - 50, width: 40, height: 50 },
                 pendulums: [
                     { pivotX: 200, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.038, phase: 0 },
@@ -1571,6 +1794,13 @@
                     { x: 2250, y: GROUND_Y - 120, radius: 8, collected: false },
                     { x: 2500, y: GROUND_Y - 150, radius: 8, collected: false }
                 ],
+                speedBoosts: [],
+                movingPlatforms: [
+                    { x: 500, y: GROUND_Y - 80, width: 100, height: 20, moveType: 'horizontal', moveRange: 100, speed: 2, initialX: 500 },
+                    { x: 1000, y: GROUND_Y - 120, width: 100, height: 20, moveType: 'vertical', moveRange: 80, speed: 1.5, initialY: GROUND_Y - 120 },
+                    { x: 1500, y: GROUND_Y - 80, width: 100, height: 20, moveType: 'horizontal', moveRange: 150, speed: 2.5, initialX: 1500 }
+                ],
+                timeChallenge: 70,
                 goal: { x: 2500, y: GROUND_Y - 50, width: 40, height: 50 },
                 pit: { x: 500, width: 100, depth: 230, leftSlope: { x: 500, width: 40 }, rightSlope: { x: 560, width: 40 } },
                 pendulums: [
@@ -1590,7 +1820,7 @@
         let jumpPressed = false;
 
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
+            if (e.code === keyBindings.jump) {
                 e.preventDefault();
                 if (!jumpPressed) { jumpPressed = true; jump(); }
             }
@@ -1599,7 +1829,7 @@
 
         document.addEventListener('keyup', (e) => {
             keys[e.code] = false;
-            if (e.code === 'Space') jumpPressed = false;
+            if (e.code === keyBindings.jump) jumpPressed = false;
         });
 
         canvas.addEventListener('click', () => { initAudio(); if (gameState === 'playing') jump(); });
@@ -1620,7 +1850,6 @@
         function buildMainMenu() {
             document.getElementById('menuCoins').textContent = '🪙 سکه: ' + toPersianNumber(totalCoins);
             
-            // ✅ نمایش درصد پیشرفت
             const completedLevels = Object.values(levelProgress).filter(status => status === 'completed').length;
             const progressPercent = Math.round((completedLevels / TOTAL_LEVELS) * 100);
             
@@ -1645,7 +1874,6 @@
                 else if (status === 'completed') { statusIcon = '✅'; statusText = 'تکمیل'; }
                 else { statusIcon = '▶️'; statusText = 'شروع'; }
 
-                // ✅ نمایش صحیح نام مرحله با اعداد فارسی
                 btn.innerHTML = `
                     <div class="level-num">${statusIcon}</div>
                     <div>${level.name}</div>
@@ -1660,8 +1888,9 @@
                 menuLevels.appendChild(btn);
             }
             
-            // بررسی جایزه روزانه
             checkDailyReward();
+            updateMenuInstructions();
+            updateMenuStats();
         }
 
         function showMainMenu() {
@@ -1693,11 +1922,18 @@
             cameraX = 0;
             gameState = 'playing';
             gameTime = 0;
+            levelTime = 0;
             levelCoins = 0;
             particles = [];
+            speedBoostActive = false;
+            speedBoostTimer = 0;
 
             if (level.coins) {
                 for (const coin of level.coins) coin.collected = false;
+            }
+
+            if (level.speedBoosts) {
+                for (const boost of level.speedBoosts) boost.collected = false;
             }
 
             if (level.rollingBalls) {
@@ -1705,6 +1941,14 @@
                     ball.currentX = ball.startX;
                     ball.direction = 1;
                     ball.rotation = 0;
+                }
+            }
+
+            if (level.movingPlatforms) {
+                for (const platform of level.movingPlatforms) {
+                    platform.x = platform.initialX || platform.x;
+                    platform.y = platform.initialY || platform.y;
+                    platform.moveOffset = 0;
                 }
             }
 
@@ -1716,18 +1960,21 @@
             updateUI();
             hideMessage();
             
-            // پخش موسیقی فصل مربوطه
             playSeasonMusic(currentSeason);
         }
 
         function updateUI() {
             document.getElementById('scoreInfo').textContent = 'امتیاز: ' + toPersianNumber(score);
             document.getElementById('coinInfo').textContent = '🪙 سکه: ' + toPersianNumber(totalCoins) + ' (این مرحله: ' + toPersianNumber(levelCoins) + ')';
-            
-            // ✅ محاسبه و نمایش درصد پیشرفت
-            const completedLevels = Object.values(levelProgress).filter(status => status === 'completed').length;
-            const progressPercent = Math.round((completedLevels / TOTAL_LEVELS) * 100);
-            document.getElementById('progressInfo').textContent = 'پیشرفت: ' + toPersianNumber(progressPercent) + '%';
+            document.getElementById('timer').textContent = toPersianNumber(Math.floor(levelTime / 60));
+
+            const speedBoostInfo = document.getElementById('speedBoostInfo');
+            if (speedBoostActive) {
+                speedBoostInfo.style.display = 'block';
+                document.getElementById('speedBoostTimer').textContent = Math.ceil(speedBoostTimer / 60);
+            } else {
+                speedBoostInfo.style.display = 'none';
+            }
         }
 
         function checkCollision(player, obstacle) {
@@ -1789,6 +2036,24 @@
                     }
                 }
             }
+
+            if (level.movingPlatforms) {
+                for (const platform of level.movingPlatforms) {
+                    if (player.x + player.width > platform.x && player.x < platform.x + platform.width) {
+                        if (player.y + player.height >= platform.y &&
+                            player.y + player.height <= platform.y + 25 && player.vy >= 0) {
+                            player.y = platform.y - player.height;
+                            player.vy = 0;
+                            player.isJumping = false;
+                            onPlatform = true;
+                            if (platform.moveType === 'horizontal') {
+                                player.x += platform.speed * (platform.direction || 1);
+                            }
+                        }
+                    }
+                }
+            }
+
             return onPlatform;
         }
 
@@ -1797,12 +2062,13 @@
             player.isDead = true;
             player.deathTimer = 60;
             player.vy = -5;
+            gameStats.totalDeaths++;
             playSound('death');
             spawnParticles(player.x + 15, player.y + 30, '#E74C3C', 10, 3);
 
             setTimeout(() => {
                 gameState = 'lost';
-                showMessage('💀 باختی!', reason + ' امتیاز: ' + toPersianNumber(score) + ' | سکه این مرحله: ' + toPersianNumber(levelCoins), 'تلاش دوباره', () => {
+                showMessage(' باختی!', reason + ' امتیاز: ' + toPersianNumber(score) + ' | سکه این مرحله: ' + toPersianNumber(levelCoins), 'تلاش دوباره', () => {
                     startLevelGame(currentLevel);
                 });
             }, 600);
@@ -1812,16 +2078,26 @@
             if (gameState !== 'playing') { updateParticles(); return; }
 
             gameTime++;
+            levelTime++;
             const level = levels[currentLevel];
 
-            // ✅ انیمیشن دویدن نرم‌تر با smoothing
-            let targetVx = 0;
-            if (keys['ArrowRight'] || keys['KeyD']) { targetVx = PLAYER_SPEED; player.facingRight = true; }
-            if (keys['ArrowLeft'] || keys['KeyA']) { targetVx = -PLAYER_SPEED; player.facingRight = false; }
+            if (speedBoostActive) {
+                speedBoostTimer--;
+                if (speedBoostTimer <= 0) {
+                    speedBoostActive = false;
+                }
+            }
 
-            // استفاده از interpolation برای حرکت نرم‌تر
+            let targetVx = 0;
+            if (keys[keyBindings.right]) { targetVx = PLAYER_SPEED; player.facingRight = true; }
+            if (keys[keyBindings.left]) { targetVx = -PLAYER_SPEED; player.facingRight = false; }
+
             const smoothing = player.onIce ? 0.04 : 0.15;
             player.smoothVx += (targetVx - player.smoothVx) * smoothing;
+            
+            if (speedBoostActive) {
+                player.smoothVx *= 2;
+            }
             
             if (player.onIce) {
                 if (Math.abs(player.smoothVx) > 1 && Math.random() < 0.3) {
@@ -1861,10 +2137,38 @@
                 }
             }
 
+            if (level.speedBoosts) {
+                for (const boost of level.speedBoosts) {
+                    if (!boost.collected) {
+                        const px = player.x + player.width / 2;
+                        const py = player.y + player.height / 2;
+                        if (px > boost.x && px < boost.x + boost.width &&
+                            py > boost.y && py < boost.y + boost.height) {
+                            boost.collected = true;
+                            speedBoostActive = true;
+                            speedBoostTimer = speedBoostDuration;
+                            playSound('speedboost');
+                            spawnParticles(boost.x + 15, boost.y + 15, '#FFA500', 10, 4);
+                        }
+                    }
+                }
+            }
+
+            if (level.movingPlatforms) {
+                for (const platform of level.movingPlatforms) {
+                    platform.moveOffset += platform.speed;
+                    if (platform.moveType === 'horizontal') {
+                        platform.x = platform.initialX + Math.sin(platform.moveOffset * 0.02) * platform.moveRange;
+                    } else if (platform.moveType === 'vertical') {
+                        platform.y = platform.initialY + Math.sin(platform.moveOffset * 0.02) * platform.moveRange;
+                    }
+                }
+            }
+
             const goal = level.goal;
             if (player.x >= goal.x - 20 && player.x <= goal.x + 150) {
                 if (!completedLevelsData[currentLevel]) {
-                    completedLevelsData[currentLevel] = { completed: false, coinsCollected: 0 };
+                    completedLevelsData[currentLevel] = { completed: false, coinsCollected: 0, bestTime: null, stars: 0 };
                 }
                 const levelData = completedLevelsData[currentLevel];
 
@@ -1873,6 +2177,21 @@
                     totalCoins += levelCoins;
                     levelData.completed = true;
                     levelData.coinsCollected = levelCoins;
+                    
+                    const timeSeconds = Math.floor(levelTime / 60);
+                    if (!levelData.bestTime || timeSeconds < levelData.bestTime) {
+                        levelData.bestTime = timeSeconds;
+                    }
+                    
+                    let stars = 1;
+                    const totalCoinsInLevel = level.coins ? level.coins.length : 0;
+                    const coinPercentage = (levelCoins / totalCoinsInLevel) * 100;
+                    
+                    if (coinPercentage >= 50) stars = 2;
+                    if (coinPercentage >= 100 && timeSeconds <= level.timeChallenge) stars = 3;
+                    
+                    levelData.stars = stars;
+                    
                     playSound('win');
                     spawnParticles(goal.x + 20, goal.y + 20, '#FFD700', 20, 5);
                     spawnParticles(goal.x + 20, goal.y + 20, '#2ECC40', 15, 4);
@@ -1927,13 +2246,22 @@
             if (player.x < 0) player.x = 0;
 
             updateParticles();
+            updateUI();
         }
 
         function showLevelCompleteMessage(isFirstTime) {
-            const title = '✅ مرحله ' + toPersianNumber(currentLevel + 1) + ' رد شد!';
+            const level = levels[currentLevel];
+            const timeSeconds = Math.floor(levelTime / 60);
+            const stars = completedLevelsData[currentLevel].stars;
+            
+            let starText = '';
+            for (let i = 0; i < stars; i++) starText += '⭐';
+            
+            const title = '✅ مرحله ' + toPersianNumber(currentLevel + 1) + ' رد شد! ' + starText;
+            const timeChallengeText = timeSeconds <= level.timeChallenge ? ' (رکورد زمانی!)' : '';
             const text = isFirstTime
-                ? 'امتیاز +100 | سکه این مرحله: +' + toPersianNumber(levelCoins) + ' | کل سکه‌ها: ' + toPersianNumber(totalCoins)
-                : 'این مرحله قبلاً تکمیل شده بود | کل سکه‌ها: ' + toPersianNumber(totalCoins);
+                ? `امتیاز +100 | سکه این مرحله: +${toPersianNumber(levelCoins)} | زمان: ${toPersianNumber(timeSeconds)} ثانیه${timeChallengeText} | کل سکه‌ها: ${toPersianNumber(totalCoins)}`
+                : `این مرحله قبلاً تکمیل شده بود | زمان: ${toPersianNumber(timeSeconds)} ثانیه | کل سکه‌ها: ${toPersianNumber(totalCoins)}`;
 
             document.getElementById('msgTitle').textContent = title;
             document.getElementById('msgText').textContent = text;
@@ -2044,6 +2372,166 @@
             ctx.fill();
         }
 
+        // ✅ طراحی جدید و بهتر فضانورد
+        function drawAstronaut(bodyBob, walkOffset, legSpread, legBend, armAngle, dir, isDead) {
+            const suitColor = '#F0F0F0';
+            const suitShadow = '#D0D0D0';
+            const helmetColor = '#FFFFFF';
+            const visorColor = '#FFD700';
+            const visorReflection = '#FFF8DC';
+            const skinColor = '#FDBCB4';
+            const shoeColor = '#404040';
+            const backpackColor = '#E0E0E0';
+            const detailColor = '#FF4444';
+
+            // ✅ کوله پشتی اکسیژن (پشت کاراکتر)
+            ctx.fillStyle = backpackColor;
+            ctx.fillRect(-18, 24 - bodyBob, 6, 18);
+            ctx.strokeStyle = '#B0B0B0';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-18, 24 - bodyBob, 6, 18);
+            
+            // جزئیات کوله
+            ctx.fillStyle = detailColor;
+            ctx.fillRect(-17, 26 - bodyBob, 4, 3);
+            ctx.fillStyle = '#44AA44';
+            ctx.fillRect(-17, 31 - bodyBob, 4, 3);
+            ctx.fillStyle = '#4444FF';
+            ctx.fillRect(-17, 36 - bodyBob, 4, 3);
+
+            // ✅ پاها با کفش‌های بزرگ (Moon Boots)
+            ctx.strokeStyle = suitColor;
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            
+            if (isDead) {
+                ctx.beginPath(); ctx.moveTo(-5, 48 - bodyBob); ctx.lineTo(-8, 56 - bodyBob); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(5, 48 - bodyBob); ctx.lineTo(8, 56 - bodyBob); ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.moveTo(-5, 48 - bodyBob); ctx.lineTo(-5 - legSpread * 0.3 + walkOffset * 0.3, 56 - legBend); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(5, 48 - bodyBob); ctx.lineTo(5 + legSpread * 0.3 - walkOffset * 0.3, 56 - legBend); ctx.stroke();
+            }
+
+            // کفش‌های بزرگ فضانوردی
+            ctx.fillStyle = shoeColor;
+            if (!isDead) {
+                // کفش چپ
+                ctx.beginPath();
+                ctx.ellipse(-8 - legSpread * 0.3 + walkOffset * 0.3, 58 - legBend, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // کفش راست
+                ctx.beginPath();
+                ctx.ellipse(5 + legSpread * 0.3 - walkOffset * 0.3, 58 - legBend, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.ellipse(-10, 58 - bodyBob, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(8, 58 - bodyBob, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // ✅ بدن لباس فضانوردی (bulky)
+            ctx.fillStyle = suitColor;
+            // بدنه اصلی
+            ctx.beginPath();
+            ctx.roundRect(-14, 22 - bodyBob, 28, 26, 5);
+            ctx.fill();
+            
+            // سایه بدنه
+            ctx.fillStyle = suitShadow;
+            ctx.beginPath();
+            ctx.roundRect(-14, 40 - bodyBob, 28, 8, 3);
+            ctx.fill();
+
+            // آستین‌ها
+            ctx.fillStyle = suitColor;
+            ctx.fillRect(-18, 24 - bodyBob, 6, 12);
+            ctx.fillRect(12, 24 - bodyBob, 6, 12);
+
+            // نشان پرچم روی سینه
+            ctx.fillStyle = detailColor;
+            ctx.fillRect(-10, 26 - bodyBob, 8, 5);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(-10, 26 - bodyBob, 8, 2);
+
+            // ✅ دست‌ها با دستکش
+            ctx.strokeStyle = suitColor;
+            ctx.lineWidth = 5;
+            ctx.save();
+            ctx.translate(0, 28 - bodyBob);
+            ctx.rotate(armAngle * dir);
+            ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-14 - 10 * dir + walkOffset * 0.2, 12); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(14 + 10 * dir - walkOffset * 0.2, 12); ctx.stroke();
+            ctx.restore();
+
+            // دستکش‌ها
+            ctx.fillStyle = '#D0D0D0';
+            if (!isDead) {
+                ctx.beginPath();
+                ctx.arc(-14 - 10 * dir + walkOffset * 0.2, 12 - bodyBob + 28, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(14 + 10 * dir - walkOffset * 0.2, 12 - bodyBob + 28, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // ✅ کلاه ایمنی بزرگ و گرد
+            ctx.fillStyle = helmetColor;
+            ctx.beginPath();
+            ctx.arc(0, 8 - bodyBob, 16, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // حاشیه کلاه
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 8 - bodyBob, 16, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // ✅ شیشه کلاه (Visor) طلایی
+            ctx.fillStyle = visorColor;
+            ctx.beginPath();
+            ctx.ellipse(2, 8 - bodyBob, 11, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // حاشیه شیشه
+            ctx.strokeStyle = '#B8860B';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(2, 8 - bodyBob, 11, 12, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // ✅ انعکاس روی شیشه (براقیت)
+            ctx.fillStyle = visorReflection;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.ellipse(-2, 4 - bodyBob, 5, 7, -0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // انعکاس کوچک دوم
+            ctx.fillStyle = '#FFFFFF';
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            ctx.arc(5, 12 - bodyBob, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // آنتن روی کلاه
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -8 - bodyBob);
+            ctx.lineTo(0, -14 - bodyBob);
+            ctx.stroke();
+            ctx.fillStyle = detailColor;
+            ctx.beginPath();
+            ctx.arc(0, -15 - bodyBob, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
         function drawStickFigure(x, y, facingRight, frame, isJumping, isDead, deathTimer) {
             ctx.save();
             ctx.translate(x + 15, y);
@@ -2063,6 +2551,11 @@
 
             const walkOffset = Math.sin(frame * 0.4) * 6;
 
+            if (speedBoostActive) {
+                ctx.shadowColor = '#FFA500';
+                ctx.shadowBlur = 15;
+            }
+
             if (!isDead) {
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.beginPath();
@@ -2072,71 +2565,107 @@
 
             const skin = getSkinAppearance();
             const isArgentina = skin && skin.id === 'argentina';
+            const isAstronaut = skin && skin.id === 'astronaut';
 
             if (isArgentina) {
                 drawArgentinaJersey(bodyBob, walkOffset, legSpread, legBend, armAngle, dir, isDead);
+            } else if (isAstronaut) {
+                drawAstronaut(bodyBob, walkOffset, legSpread, legBend, armAngle, dir, isDead);
+            } else {
+                ctx.strokeStyle = playerColor === '#FFFFFF' ? '#000' : playerColor;
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+
+                if (isDead) {
+                    ctx.beginPath(); ctx.moveTo(0, 42); ctx.lineTo(-8, 52); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, 42); ctx.lineTo(8, 52); ctx.stroke();
+                } else {
+                    ctx.beginPath(); ctx.moveTo(0, 42); ctx.lineTo(-legSpread + walkOffset, 58 - legBend); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, 42); ctx.lineTo(legSpread - walkOffset, 58 - legBend); ctx.stroke();
+                }
+
+                ctx.beginPath(); ctx.moveTo(0, 24 - bodyBob); ctx.lineTo(0, 42); ctx.stroke();
+
+                if (isDead) {
+                    ctx.beginPath(); ctx.moveTo(0, 30); ctx.lineTo(-10, 35); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, 30); ctx.lineTo(10, 35); ctx.stroke();
+                } else {
+                    ctx.save();
+                    ctx.translate(0, 30 - bodyBob);
+                    ctx.rotate(armAngle * dir);
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-12 * dir + walkOffset * 0.3, 12); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(12 * dir - walkOffset * 0.3, 12); ctx.stroke();
+                    ctx.restore();
+                }
+
+                if (playerColor !== '#FFFFFF') {
+                    ctx.fillStyle = playerColor;
+                    ctx.fillRect(-4, 24 - bodyBob, 8, 18);
+                }
             }
 
-            ctx.beginPath();
-            ctx.arc(0, 12 - bodyBob, 12, 0, Math.PI * 2);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.fillStyle = '#FDBCB4';
-            ctx.fill();
+            if (!isAstronaut) {
+                ctx.beginPath();
+                ctx.arc(0, 12 - bodyBob, 12, 0, Math.PI * 2);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = '#FDBCB4';
+                ctx.fill();
 
-            if (isArgentina) {
-                drawMessiHead(bodyBob, isDead);
-            }
+                if (isArgentina) {
+                    drawMessiHead(bodyBob, isDead);
+                }
 
-            if (skin && !isDead) {
-                if (skin.id === 'redhat') {
-                    ctx.fillStyle = '#C0392B';
-                    ctx.beginPath();
-                    ctx.ellipse(0, 2 - bodyBob, 18, 5, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#E74C3C';
-                    ctx.beginPath();
-                    ctx.moveTo(-12, 2 - bodyBob);
-                    ctx.quadraticCurveTo(-13, -10 - bodyBob, -6, -14 - bodyBob);
-                    ctx.quadraticCurveTo(0, -17 - bodyBob, 6, -14 - bodyBob);
-                    ctx.quadraticCurveTo(13, -10 - bodyBob, 12, 2 - bodyBob);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.fillStyle = '#F1C40F';
-                    ctx.fillRect(-13, 0 - bodyBob, 26, 3);
-                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                    ctx.beginPath();
-                    ctx.ellipse(-4, -6 - bodyBob, 4, 6, -0.3, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (skin.id === 'sunglasses') {
-                    ctx.fillStyle = '#2C3E50';
-                    ctx.fillRect(-8, 7 - bodyBob, 7, 5);
-                    ctx.fillRect(1, 7 - bodyBob, 7, 5);
-                    ctx.fillRect(-1, 8 - bodyBob, 2, 3);
-                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                    ctx.fillRect(-6, 8 - bodyBob, 3, 2);
-                    ctx.fillRect(3, 8 - bodyBob, 3, 2);
-                } else if (skin.id === 'crown') {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.beginPath();
-                    ctx.moveTo(-10, 3 - bodyBob);
-                    ctx.lineTo(-10, -5 - bodyBob);
-                    ctx.lineTo(-5, 0 - bodyBob);
-                    ctx.lineTo(0, -7 - bodyBob);
-                    ctx.lineTo(5, 0 - bodyBob);
-                    ctx.lineTo(10, -5 - bodyBob);
-                    ctx.lineTo(10, 3 - bodyBob);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.strokeStyle = '#B8860B';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                    ctx.fillStyle = '#E74C3C';
-                    ctx.beginPath(); ctx.arc(0, -3 - bodyBob, 2, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = '#3498DB';
-                    ctx.beginPath(); ctx.arc(-6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
+                if (skin && !isDead) {
+                    if (skin.id === 'redhat') {
+                        ctx.fillStyle = '#C0392B';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 2 - bodyBob, 18, 5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#E74C3C';
+                        ctx.beginPath();
+                        ctx.moveTo(-12, 2 - bodyBob);
+                        ctx.quadraticCurveTo(-13, -10 - bodyBob, -6, -14 - bodyBob);
+                        ctx.quadraticCurveTo(0, -17 - bodyBob, 6, -14 - bodyBob);
+                        ctx.quadraticCurveTo(13, -10 - bodyBob, 12, 2 - bodyBob);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = '#F1C40F';
+                        ctx.fillRect(-13, 0 - bodyBob, 26, 3);
+                        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                        ctx.beginPath();
+                        ctx.ellipse(-4, -6 - bodyBob, 4, 6, -0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (skin.id === 'sunglasses') {
+                        ctx.fillStyle = '#2C3E50';
+                        ctx.fillRect(-8, 7 - bodyBob, 7, 5);
+                        ctx.fillRect(1, 7 - bodyBob, 7, 5);
+                        ctx.fillRect(-1, 8 - bodyBob, 2, 3);
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                        ctx.fillRect(-6, 8 - bodyBob, 3, 2);
+                        ctx.fillRect(3, 8 - bodyBob, 3, 2);
+                    } else if (skin.id === 'crown') {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.moveTo(-10, 3 - bodyBob);
+                        ctx.lineTo(-10, -5 - bodyBob);
+                        ctx.lineTo(-5, 0 - bodyBob);
+                        ctx.lineTo(0, -7 - bodyBob);
+                        ctx.lineTo(5, 0 - bodyBob);
+                        ctx.lineTo(10, -5 - bodyBob);
+                        ctx.lineTo(10, 3 - bodyBob);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.strokeStyle = '#B8860B';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.fillStyle = '#E74C3C';
+                        ctx.beginPath(); ctx.arc(0, -3 - bodyBob, 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#3498DB';
+                        ctx.beginPath(); ctx.arc(-6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
+                    }
                 }
             }
 
@@ -2147,17 +2676,22 @@
                 ctx.beginPath(); ctx.moveTo(2, 8 - bodyBob); ctx.lineTo(6, 12 - bodyBob); ctx.moveTo(6, 8 - bodyBob); ctx.lineTo(2, 12 - bodyBob); ctx.stroke();
             } else {
                 if (!skin || skin.id !== 'sunglasses') {
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(-5 * dir, 9 - bodyBob, 3, 3);
-                    ctx.fillRect(2 * dir, 9 - bodyBob, 3, 3);
+                    if (!isAstronaut) {
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(-5 * dir, 9 - bodyBob, 3, 3);
+                        ctx.fillRect(2 * dir, 9 - bodyBob, 3, 3);
+                    }
+                    if (!isAstronaut) {
+                        ctx.beginPath();
+                        ctx.arc(0, 14 - bodyBob, 5, 0, Math.PI);
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
                 }
-                ctx.beginPath();
-                ctx.arc(0, 14 - bodyBob, 5, 0, Math.PI);
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
-                ctx.stroke();
             }
 
+            ctx.shadowBlur = 0;
             ctx.restore();
         }
 
@@ -2201,6 +2735,25 @@
                     ctx.fill();
                     ctx.fillStyle = '#C98B6B';
                     ctx.fillRect(platform.x, platform.y, platform.width, 5);
+                }
+            }
+
+            if (level.movingPlatforms) {
+                for (const platform of level.movingPlatforms) {
+                    const gradient = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platform.height);
+                    gradient.addColorStop(0, '#8B4513');
+                    gradient.addColorStop(1, '#654321');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                    
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(platform.x + 5, platform.y + platform.height/2);
+                    ctx.lineTo(platform.x + platform.width - 5, platform.y + platform.height/2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
                 }
             }
 
@@ -2299,6 +2852,29 @@
                     ctx.arc(ball.currentX - 18, ball.y - 18, 12, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(255,255,255,0.35)';
                     ctx.fill();
+                }
+            }
+
+            if (level.speedBoosts) {
+                for (const boost of level.speedBoosts) {
+                    if (!boost.collected) {
+                        ctx.save();
+                        ctx.translate(boost.x + 15, boost.y + 15);
+                        
+                        ctx.shadowColor = '#FFA500';
+                        ctx.shadowBlur = 10;
+                        
+                        ctx.fillStyle = '#FFA500';
+                        ctx.beginPath();
+                        ctx.moveTo(-10, -10);
+                        ctx.lineTo(10, 0);
+                        ctx.lineTo(-10, 10);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.shadowBlur = 0;
+                        ctx.restore();
+                    }
                 }
             }
 
