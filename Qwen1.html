@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بازی پرش از موانع - دو فصل</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 900px;
+            height: 500px;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        canvas { display: block; }
+
+        .ui-overlay {
+            position: absolute;
+            top: 15px; left: 15px; right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+            gap: 8px;
+        }
+
+        .level-info {
+            background: rgba(0,0,0,0.5);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .progress-info {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #FFD700;
+        }
+
+        .main-menu {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .main-menu.hidden { display: none; }
+
+        .menu-title {
+            font-size: 38px;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+
+        .menu-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 15px;
+        }
+
+        .menu-coins {
+            font-size: 18px;
+            color: #FFD700;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.4);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+
+        .daily-reward {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .daily-reward:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .daily-reward.claimed {
+            background: #2ECC40;
+            color: white;
+            animation: none;
+            cursor: default;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .season-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .season-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .season-btn.active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
+        }
+
+        .menu-levels {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+            margin-bottom: 10px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .menu-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        .menu-btn.shop-btn {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+
+        .menu-btn.settings-btn {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498DB;
+        }
+
+        .level-btn {
+            width: 95px;
+            height: 95px;
+            border: 3px solid #fff;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .level-btn:hover:not(.locked) {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+
+        .level-btn.completed { border-color: #2ECC40; background: rgba(46, 204, 64, 0.2); }
+        .level-btn.current { border-color: #FFD700; background: rgba(255, 215, 0, 0.2); }
+        .level-btn.locked { border-color: #666; background: rgba(0,0,0,0.3); cursor: not-allowed; opacity: 0.6; }
+
+        .level-btn .level-num { font-size: 28px; margin-bottom: 3px; }
+        .level-btn .level-status { font-size: 10px; opacity: 0.8; margin-top: 2px; }
+        .menu-instructions { position: absolute; bottom: 15px; color: rgba(255,255,255,0.6); font-size: 12px; }
+
+        .shop-overlay, .settings-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 35;
+        }
+
+        .shop-overlay.hidden, .settings-overlay.hidden { display: none; }
+
+        .shop-title, .settings-title { font-size: 32px; color: #FFD700; margin-bottom: 10px; }
+        .shop-coins { font-size: 18px; color: #FFD700; margin-bottom: 15px; background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 20px; }
+
+        .shop-items {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 700px;
+            margin-bottom: 15px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .shop-item {
+            width: 140px;
+            height: 180px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .shop-item:hover { transform: scale(1.05); }
+        .shop-item.owned { border-color: #2ECC40; background: rgba(46, 204, 64, 0.15); }
+        .shop-item.equipped { border-color: #FFD700; background: rgba(255, 215, 0, 0.2); }
+
+        .shop-item .item-preview { font-size: 40px; margin-bottom: 8px; }
+        .shop-item .item-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+        .shop-item .item-price { font-size: 12px; color: #FFD700; margin-bottom: 8px; }
+        .shop-item .item-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.2); }
+
+        .setting-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin: 10px;
+            width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .setting-label {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .volume-slider {
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #FFD700;
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #FFD700;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-value {
+            color: #FFD700;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .shop-close, .settings-close {
+            padding: 8px 25px;
+            font-size: 14px;
+            background: rgba(231, 76, 60, 0.7);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .message-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            z-index: 20;
+            display: none;
+        }
+
+        .message-overlay.active { display: flex; }
+        .message-overlay h2 { font-size: 32px; margin-bottom: 15px; }
+        .message-overlay p { font-size: 18px; margin-bottom: 20px; }
+
+        .message-overlay button {
+            padding: 10px 25px;
+            font-size: 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn-menu { background: #3498db !important; }
+        .btn-next { background: #2ECC40 !important; }
+
+        .instructions {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 15;
+        }
+
+        .level-desc { font-size: 9px; opacity: 0.7; margin-top: 2px; }
+
+        .reset-btn {
+            position: absolute;
+            bottom: 40px;
+            background: rgba(231, 76, 60, 0.6);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
+
+        <div class="main-menu" id="mainMenu">
+            <div class="menu-title">🎮 بازی پرش از موانع</div>
+            <div class="menu-subtitle">مرحله مورد نظرت رو انتخاب کن</div>
+            <div class="menu-coins" id="menuCoins">🪙 سکه: 0</div>
+            
+            <div class="daily-reward" id="dailyReward" onclick="claimDailyReward()">
+                🎁 جایزه ورود روزانه: <span id="dailyRewardAmount">1</span> سکه
+            </div>
+            
+            <div class="season-selector">
+                <button class="season-btn active" onclick="switchSeason(1)" id="season1Btn">فصل ۱</button>
+                <button class="season-btn" onclick="switchSeason(2)" id="season2Btn">فصل ۲</button>
+            </div>
+            
+            <div class="menu-buttons">
+                <button class="menu-btn shop-btn" onclick="openShop()">🛒 فروشگاه</button>
+                <button class="menu-btn settings-btn" onclick="openSettings()">⚙️ تنظیمات</button>
+            </div>
+            <div class="menu-levels" id="menuLevels"></div>
+            <button class="reset-btn" onclick="resetProgress()">🔄 پاک کردن پیشرفت</button>
+            <div class="menu-instructions">← → حرکت | Space یا کلیک برای پرش</div>
+        </div>
+
+        <div class="shop-overlay hidden" id="shopOverlay">
+            <div class="shop-title">🛒 فروشگاه</div>
+            <div class="shop-coins" id="shopCoins">🪙 سکه: 0</div>
+            <div class="shop-items" id="shopItems"></div>
+            <button class="shop-close" onclick="closeShop()">بازگشت به منو</button>
+        </div>
+
+        <div class="settings-overlay hidden" id="settingsOverlay">
+            <div class="settings-title">⚙️ تنظیمات</div>
+            
+            <div class="setting-item">
+                <span class="setting-label"> صدای موزیک</span>
+                <input type="range" class="volume-slider" id="musicVolume" min="0" max="100" value="50">
+                <span class="volume-value" id="musicVolumeValue">50%</span>
+            </div>
+            
+            <div class="setting-item">
+                <span class="setting-label">🔊 صدای افکت‌ها</span>
+                <input type="range" class="volume-slider" id="sfxVolume" min="0" max="100" value="70">
+                <span class="volume-value" id="sfxVolumeValue">70%</span>
+            </div>
+            
+            <button class="settings-close" onclick="closeSettings()">بستن</button>
+        </div>
+
+        <div class="ui-overlay" id="gameUI" style="display: none;">
+            <div class="level-info" id="levelInfo">مرحله: </div>
+            <div class="level-info progress-info" id="progressInfo">پیشرفت: 0%</div>
+            <div class="level-info" id="scoreInfo">امتیاز: 0</div>
+            <div class="level-info" id="coinInfo">🪙 سکه: 0</div>
+        </div>
+
+        <button class="back-btn" id="backBtn" style="display: none;" onclick="showMainMenu()">🏠 منوی اصلی</button>
+
+        <div class="message-overlay" id="messageOverlay">
+            <h2 id="msgTitle"></h2>
+            <p id="msgText"></p>
+            <div id="msgButtons">
+                <button id="msgBtn">ادامه</button>
+            </div>
+        </div>
+
+        <div class="instructions" id="gameInstructions" style="display: none;">
+            ← → حرکت | Space یا کلیک برای پرش | از موانع فرار کن!
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GROUND_Y = 270;
+        const GROUND_HEIGHT = 100;
+        const GRAVITY = 0.6;
+        const JUMP_FORCE = -13;
+        const PLAYER_SPEED = 4;
+
+        let currentLevel = 0;
+        let score = 0;
+        let totalCoins = 0;
+        let levelCoins = 0;
+        let gameState = 'menu';
+        let cameraX = 0;
+        let levelWidth = 0;
+        let gameTime = 0;
+        let currentSeason = 1;
+
+        // ✅ تنظیمات صدا
+        let musicVolume = 0.5;
+        let sfxVolume = 0.7;
+        let currentMusicOscillators = [];
+        let musicInterval = null;
+
+        let particles = [];
+
+        const TOTAL_LEVELS = 20;
+        const LEVELS_PER_SEASON = 10;
+
+        let levelProgress = {};
+        let completedLevelsData = {};
+        for (let i = 0; i < TOTAL_LEVELS; i++) {
+            levelProgress[i] = i === 0 ? 'current' : 'locked';
+            completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+        }
+
+        let ownedSkins = ['default'];
+        let equippedSkin = 'default';
+        let playerColor = '#FFFFFF';
+
+        // ✅ سیستم جایزه روزانه
+        let dailyRewardData = {
+            lastClaimDate: null,
+            streak: 0
+        };
+
+        const skins = [
+            { id: 'redhat', name: 'کلاه قرمز', price: 25, emoji: '🎩' },
+            { id: 'sunglasses', name: 'عینک آفتابی', price: 40, emoji: '🕶️' },
+            { id: 'crown', name: 'تاج طلایی', price: 53, emoji: '👑' },
+            { id: 'argentina', name: 'لباس آرژانتین', price: 10, emoji: '🇦🇷' }
+        ];
+
+        const playerColors = [
+            { id: 'color_white', name: 'سفید', color: '#FFFFFF', price: 0, emoji: '⚪' },
+            { id: 'color_blue', name: 'آبی', color: '#3498DB', price: 15, emoji: '🔵' },
+            { id: 'color_green', name: 'سبز', color: '#2ECC71', price: 15, emoji: '🟢' },
+            { id: 'color_yellow', name: 'زرد', color: '#F1C40F', price: 15, emoji: '' },
+            { id: 'color_purple', name: 'بنفش', color: '#9B59B6', price: 15, emoji: '🟣' },
+            { id: 'color_orange', name: 'نارنجی', color: '#E67E22', price: 15, emoji: '' }
+        ];
+
+        let audioCtx = null;
+
+        // ✅ تابع تبدیل اعداد به فارسی - اصلاح شده
+        function toPersianNumber(num) {
+            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return num.toString().split('').map(digit => {
+                const num = parseInt(digit);
+                return persianDigits[num] || digit;
+            }).join('');
+        }
+
+        // ✅ سیستم صوتی پیشرفته با موسیقی متفاوت برای هر فصل
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            playSeasonMusic(currentSeason);
+        }
+
+        function playSeasonMusic(season) {
+            if (!audioCtx) return;
+            
+            // ✅ توقف موسیقی قبلی قبل از پخش جدید
+            stopMusic();
+            
+            // فرکانس‌های مختلف برای هر فصل
+            const seasonFrequencies = {
+                1: [261.63, 329.63, 392.00], // C Major - فصل 1
+                2: [293.66, 349.23, 440.00]  // D Major - فصل 2
+            };
+            
+            const frequencies = seasonFrequencies[season] || seasonFrequencies[1];
+            let noteIndex = 0;
+            
+            function playNextNote() {
+                if (gameState !== 'playing' && gameState !== 'menu') return;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequencies[noteIndex], audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(musicVolume * 0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+                
+                currentMusicOscillators.push(osc);
+                noteIndex = (noteIndex + 1) % frequencies.length;
+            }
+            
+            // پخش نت‌ها هر 500 میلی‌ثانیه
+            musicInterval = setInterval(playNextNote, 500);
+            playNextNote(); // پخش اولین نت بلافاصله
+        }
+
+        function stopMusic() {
+            // ✅ توقف interval
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+            
+            // ✅ توقف همه oscillators
+            currentMusicOscillators.forEach(osc => {
+                try {
+                    osc.stop();
+                } catch(e) {}
+            });
+            currentMusicOscillators = [];
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                const volume = sfxVolume;
+
+                if (type === 'jump') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'coin') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.setValueAtTime(1200, now + 0.08);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'death') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    [523, 659, 784, 1047].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g); g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(freq, now + i * 0.1);
+                        g.gain.setValueAtTime(volume * 0.2, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.15);
+                        o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.15);
+                    });
+                    return;
+                } else if (type === 'buy') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.setValueAtTime(600, now + 0.1);
+                    osc.frequency.setValueAtTime(800, now + 0.2);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'error') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(150, now + 0.1);
+                    gain.gain.setValueAtTime(volume * 0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                }
+            } catch (e) {}
+        }
+
+        function spawnParticles(x, y, color, count, speed = 3) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * speed * 2,
+                    vy: (Math.random() - 1) * speed,
+                    life: 30 + Math.random() * 20,
+                    maxLife: 50,
+                    color,
+                    size: 2 + Math.random() * 3
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // ✅ مدیریت جایزه روزانه
+        function checkDailyReward() {
+            const today = new Date().toDateString();
+            const rewardBtn = document.getElementById('dailyReward');
+            const rewardAmount = document.getElementById('dailyRewardAmount');
+            
+            if (dailyRewardData.lastClaimDate === today) {
+                // امروز جایزه رو گرفتی
+                rewardBtn.classList.add('claimed');
+                rewardBtn.innerHTML = '✅ جایزه امروز رو گرفتی!';
+                rewardBtn.onclick = null;
+            } else {
+                // محاسبه جایزه بر اساس streak
+                const rewards = [1, 2, 3, 4, 10];
+                const reward = rewards[dailyRewardData.streak % 5];
+                rewardAmount.textContent = toPersianNumber(reward);
+                rewardBtn.classList.remove('claimed');
+                rewardBtn.onclick = claimDailyReward;
+            }
+        }
+
+        function claimDailyReward() {
+            const today = new Date().toDateString();
+            
+            if (dailyRewardData.lastClaimDate === today) {
+                playSound('error');
+                return;
+            }
+            
+            const rewards = [1, 2, 3, 4, 10];
+            const reward = rewards[dailyRewardData.streak % 5];
+            
+            totalCoins += reward;
+            dailyRewardData.lastClaimDate = today;
+            dailyRewardData.streak = (dailyRewardData.streak + 1) % 5;
+            
+            playSound('coin');
+            saveProgress();
+            checkDailyReward();
+            updateUI();
+            
+            showMessage('🎁 جایزه روزانه!', `تبریک! ${toPersianNumber(reward)} سکه گرفتی! `, 'متوجه شدم', () => {
+                hideMessage();
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('jumpGameProgress');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    levelProgress = data.levelProgress || levelProgress;
+                    score = data.score || 0;
+                    totalCoins = data.totalCoins || 0;
+                    ownedSkins = data.ownedSkins || ['default'];
+                    equippedSkin = data.equippedSkin || 'default';
+                    playerColor = data.playerColor || '#FFFFFF';
+                    currentSeason = data.currentSeason || 1;
+                    dailyRewardData = data.dailyRewardData || { lastClaimDate: null, streak: 0 };
+                    
+                    if (data.completedLevelsData) {
+                        for (let i = 0; i < TOTAL_LEVELS; i++) {
+                            if (!data.completedLevelsData[i]) {
+                                data.completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+                            }
+                        }
+                        completedLevelsData = data.completedLevelsData;
+                    }
+                    
+                    for (let i = 0; i < TOTAL_LEVELS; i++) {
+                        if (levelProgress[i] === undefined) {
+                            levelProgress[i] = 'locked';
+                        }
+                    }
+
+                    // ✅ بارگذاری تنظیمات صدا
+                    musicVolume = data.musicVolume !== undefined ? data.musicVolume : 0.5;
+                    sfxVolume = data.sfxVolume !== undefined ? data.sfxVolume : 0.7;
+                    
+                    // آپدیت اسلایدرها
+                    document.getElementById('musicVolume').value = musicVolume * 100;
+                    document.getElementById('sfxVolume').value = sfxVolume * 100;
+                    document.getElementById('musicVolumeValue').textContent = Math.round(musicVolume * 100) + '%';
+                    document.getElementById('sfxVolumeValue').textContent = Math.round(sfxVolume * 100) + '%';
+                    
+                } catch (e) {
+                    console.log('خطا در بارگذاری:', e);
+                }
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('jumpGameProgress', JSON.stringify({
+                levelProgress, score, totalCoins, completedLevelsData,
+                ownedSkins, equippedSkin, playerColor, currentSeason,
+                dailyRewardData, musicVolume, sfxVolume
+            }));
+        }
+
+        function resetProgress() {
+            if (confirm('آیا مطمئنی که می‌خوای پیشرفتت پاک بشه؟')) {
+                localStorage.removeItem('jumpGameProgress');
+                levelProgress = {};
+                completedLevelsData = {};
+                for (let i = 0; i < TOTAL_LEVELS; i++) {
+                    levelProgress[i] = i === 0 ? 'current' : 'locked';
+                    completedLevelsData[i] = { completed: false, coinsCollected: 0 };
+                }
+                score = 0; totalCoins = 0;
+                ownedSkins = ['default'];
+                equippedSkin = 'default';
+                playerColor = '#FFFFFF';
+                currentSeason = 1;
+                dailyRewardData = { lastClaimDate: null, streak: 0 };
+                buildMainMenu();
+            }
+        }
+
+        function switchSeason(season) {
+            currentSeason = season;
+            document.getElementById('season1Btn').classList.toggle('active', season === 1);
+            document.getElementById('season2Btn').classList.toggle('active', season === 2);
+            
+            // ✅ تغییر موسیقی هنگام تغییر فصل
+            if (audioCtx && (gameState === 'menu' || gameState === 'playing')) {
+                playSeasonMusic(season);
+            }
+            
+            buildMainMenu();
+        }
+
+        function openShop() {
+            initAudio();
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('shopOverlay').classList.remove('hidden');
+            buildShop();
+        }
+
+        function closeShop() {
+            document.getElementById('shopOverlay').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+            buildMainMenu();
+        }
+
+        function openSettings() {
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('settingsOverlay').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsOverlay').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+            saveProgress();
+        }
+
+        // ✅ کنترل صدای موزیک و افکت‌ها
+        document.addEventListener('DOMContentLoaded', () => {
+            const musicSlider = document.getElementById('musicVolume');
+            const sfxSlider = document.getElementById('sfxVolume');
+            const musicValue = document.getElementById('musicVolumeValue');
+            const sfxValue = document.getElementById('sfxVolumeValue');
+            
+            if (musicSlider) {
+                musicSlider.addEventListener('input', (e) => {
+                    musicVolume = e.target.value / 100;
+                    musicValue.textContent = e.target.value + '%';
+                });
+            }
+            
+            if (sfxSlider) {
+                sfxSlider.addEventListener('input', (e) => {
+                    sfxVolume = e.target.value / 100;
+                    sfxValue.textContent = e.target.value + '%';
+                });
+            }
+        });
+
+        function buildShop() {
+            document.getElementById('shopCoins').textContent = '🪙 سکه: ' + toPersianNumber(totalCoins);
+            const shopItems = document.getElementById('shopItems');
+            shopItems.innerHTML = '';
+
+            skins.forEach(skin => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                const isOwned = ownedSkins.includes(skin.id);
+                const isEquipped = equippedSkin === skin.id;
+                if (isEquipped) item.classList.add('equipped');
+                else if (isOwned) item.classList.add('owned');
+
+                let statusText = isEquipped ? '✅ انتخاب شده' : isOwned ? '👕 انتخاب کن' : '🛒 خرید';
+
+                // ✅ نمایش صحیح قیمت
+                item.innerHTML = `
+                    <div class="item-preview">${skin.emoji}</div>
+                    <div class="item-name">${skin.name}</div>
+                    <div class="item-price">${isOwned ? '✅ خریداری شد' : '💰 ' + toPersianNumber(skin.price) + ' سکه'}</div>
+                    <div class="item-status">${statusText}</div>
+                `;
+                item.onclick = () => handleSkinClick(skin);
+                shopItems.appendChild(item);
+            });
+
+            playerColors.forEach(colorOpt => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                const isOwned = ownedSkins.includes(colorOpt.id);
+                const isEquipped = playerColor === colorOpt.color;
+                if (isEquipped) item.classList.add('equipped');
+                else if (isOwned) item.classList.add('owned');
+
+                let statusText = isEquipped ? '✅ انتخاب شده' : isOwned ? ' انتخاب کن' : '🛒 خرید';
+
+                // ✅ نمایش صحیح قیمت
+                item.innerHTML = `
+                    <div class="item-preview"><span style="color:${colorOpt.color}; font-size: 40px;">●</span></div>
+                    <div class="item-name">${colorOpt.name}</div>
+                    <div class="item-price">${isOwned ? '✅ خریداری شد' : '💰 ' + toPersianNumber(colorOpt.price) + ' سکه'}</div>
+                    <div class="item-status">${statusText}</div>
+                `;
+                item.onclick = () => handleColorClick(colorOpt);
+                shopItems.appendChild(item);
+            });
+        }
+
+        function handleSkinClick(skin) {
+            const isOwned = ownedSkins.includes(skin.id);
+            const isEquipped = equippedSkin === skin.id;
+            if (isEquipped) return;
+            else if (isOwned) {
+                equippedSkin = skin.id;
+                playSound('buy');
+                saveProgress();
+                buildShop();
+            } else {
+                if (totalCoins >= skin.price) {
+                    totalCoins -= skin.price;
+                    ownedSkins.push(skin.id);
+                    equippedSkin = skin.id;
+                    playSound('buy');
+                    saveProgress();
+                    buildShop();
+                } else {
+                    playSound('error');
+                    alert('سکه کافی نداری! نیاز به ' + toPersianNumber(skin.price) + ' سکه داری.');
+                }
+            }
+        }
+
+        function handleColorClick(colorOpt) {
+            const isOwned = ownedSkins.includes(colorOpt.id);
+            const isEquipped = playerColor === colorOpt.color;
+            if (isEquipped) return;
+            else if (isOwned) {
+                playerColor = colorOpt.color;
+                playSound('buy');
+                saveProgress();
+                buildShop();
+            } else {
+                if (totalCoins >= colorOpt.price) {
+                    totalCoins -= colorOpt.price;
+                    ownedSkins.push(colorOpt.id);
+                    playerColor = colorOpt.color;
+                    playSound('buy');
+                    saveProgress();
+                    buildShop();
+                } else {
+                    playSound('error');
+                    alert('سکه کافی نداری! نیاز به ' + toPersianNumber(colorOpt.price) + ' سکه داری.');
+                }
+            }
+        }
+
+        const player = {
+            x: 50, y: GROUND_Y - 60,
+            width: 30, height: 60,
+            vx: 0, vy: 0,
+            isJumping: false, isDead: false,
+            deathTimer: 0, facingRight: true,
+            animFrame: 0, onIce: false,
+            // ✅ برای انیمیشن نرم‌تر
+            targetVx: 0,
+            smoothVx: 0
+        };
+
+        const levels = [
+            {
+                name: 'مرحله ' + toPersianNumber(1), desc: 'دایره‌های قرمز', width: 1200,
+                platforms: [{ x: 0, y: GROUND_Y, width: 1200, height: GROUND_HEIGHT }],
+                obstacles: [
+                    { x: 350, y: GROUND_Y - 30, radius: 30 },
+                    { x: 650, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 200, y: GROUND_Y - 100, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 130, radius: 8, collected: false },
+                    { x: 800, y: GROUND_Y - 100, radius: 8, collected: false },
+                    { x: 1000, y: GROUND_Y - 130, radius: 8, collected: false }
+                ],
+                goal: { x: 1100, y: GROUND_Y - 50, width: 40, height: 50 }
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(2), desc: 'چاله‌ها و موانع', width: 1600,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 600, height: GROUND_HEIGHT },
+                    { x: 700, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1200, y: GROUND_Y, width: 400, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 420, y: GROUND_Y - 30, radius: 30 },
+                    { x: 850, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1000, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1350, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 300, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 650, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 900, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1150, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1500, y: GROUND_Y - 50, width: 40, height: 50 }
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(3), desc: 'پرتگاه', width: 1800,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 900, height: GROUND_HEIGHT },
+                    { x: 1050, y: GROUND_Y, width: 750, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 300, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 600, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1450, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 450, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 750, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 975, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1500, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 900, width: 150, depth: 230, leftSlope: { x: 900, width: 50 }, rightSlope: { x: 1000, width: 50 } }
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(4), desc: 'گوی آونگی', width: 1400,
+                platforms: [{ x: 0, y: GROUND_Y, width: 1400, height: GROUND_HEIGHT }],
+                obstacles: [],
+                coins: [
+                    { x: 200, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 400, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1000, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1300, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 500, pivotY: 0, ropeLength: 220, ballRadius: 40, swingAngle: Math.PI / 3, speed: 0.025, phase: 0 },
+                    { pivotX: 900, pivotY: 0, ropeLength: 220, ballRadius: 40, swingAngle: Math.PI / 3, speed: 0.025, phase: Math.PI }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(5), desc: 'دایره غلتان', width: 1400,
+                platforms: [{ x: 0, y: GROUND_Y, width: 1400, height: GROUND_HEIGHT }],
+                obstacles: [],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1000, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1300, y: GROUND_Y - 50, width: 40, height: 50 },
+                rollingBalls: [
+                    { startX: 200, endX: 900, y: GROUND_Y - 5, radius: 55, speed: 3.5, direction: 1, currentX: 200, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(6), desc: 'چالش ترکیبی', width: 1800,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 600, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 1200, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 150, y: GROUND_Y - 30, radius: 30 },
+                    { x: 350, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 750, y: GROUND_Y - 30, radius: 30 },
+                    { x: 950, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1300, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1450, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1580, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 250, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 550, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1150, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1500, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 450, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.03, phase: 0 },
+                    { pivotX: 1050, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.03, phase: Math.PI }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(7), desc: 'آونگ + یخ', width: 1500,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 400, y: GROUND_Y, width: 300, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 700, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 400, height: GROUND_HEIGHT, type: 'ice' }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1300, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1400, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 350, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: 0 },
+                    { pivotX: 750, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: Math.PI },
+                    { pivotX: 1150, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: Math.PI / 2 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(8), desc: 'پرتگاه + غلتان', width: 2000,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 700, height: GROUND_HEIGHT },
+                    { x: 850, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1400, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 300, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1000, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1700, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 200, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 950, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1600, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1850, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 700, width: 150, depth: 230, leftSlope: { x: 700, width: 50 }, rightSlope: { x: 800, width: 50 } },
+                rollingBalls: [
+                    { startX: 900, endX: 1200, y: GROUND_Y - 5, radius: 50, speed: 3, direction: 1, currentX: 900, rotation: 0 },
+                    { startX: 1450, endX: 1800, y: GROUND_Y - 5, radius: 50, speed: 3.5, direction: 1, currentX: 1450, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(9), desc: 'آونگ + مثلث + یخ', width: 1800,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 600, height: GROUND_HEIGHT },
+                    { x: 600, y: GROUND_Y, width: 400, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1000, y: GROUND_Y, width: 800, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 450, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 700, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1400, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1550, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 400, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 750, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1000, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1300, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1600, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1700, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 350, pivotY: 0, ropeLength: 180, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
+                    { pivotX: 900, pivotY: 0, ropeLength: 180, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI },
+                    { pivotX: 1300, pivotY: 0, ropeLength: 180, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI / 2 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(10), desc: 'همه موانع!', width: 2200,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 400, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 750, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1400, y: GROUND_Y, width: 800, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 400, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1600, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1850, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 2000, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1550, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1800, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 2050, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 2100, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
+                pendulums: [
+                    { pivotX: 500, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: 0 },
+                    { pivotX: 1200, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.5, speed: 0.03, phase: Math.PI }
+                ],
+                rollingBalls: [
+                    { startX: 1500, endX: 1900, y: GROUND_Y - 5, radius: 50, speed: 3, direction: 1, currentX: 1500, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(11), desc: 'مثلث + چاله', width: 1700,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 600, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 150, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 350, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 750, y: GROUND_Y - 30, radius: 30 },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1250, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1400, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 250, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 550, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 800, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1500, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1600, y: GROUND_Y - 50, width: 40, height: 50 }
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(12), desc: 'آونگ + یخ + دایره', width: 1600,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 400, y: GROUND_Y, width: 300, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 700, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 500, height: GROUND_HEIGHT, type: 'ice' }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 550, y: GROUND_Y - 30, radius: 30 },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1300, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1450, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1500, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 300, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.3, speed: 0.032, phase: 0 },
+                    { pivotX: 800, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.3, speed: 0.032, phase: Math.PI },
+                    { pivotX: 1250, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.3, speed: 0.032, phase: Math.PI / 2 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(13), desc: 'غلتان + مثلث + پرتگاه', width: 2000,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 600, height: GROUND_HEIGHT },
+                    { x: 750, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 1400, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 450, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 900, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1600, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1850, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1550, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1800, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
+                rollingBalls: [
+                    { startX: 800, endX: 1150, y: GROUND_Y - 5, radius: 50, speed: 3.2, direction: 1, currentX: 800, rotation: 0 },
+                    { startX: 1450, endX: 1800, y: GROUND_Y - 5, radius: 50, speed: 3.5, direction: 1, currentX: 1450, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(14), desc: 'آونگ‌های متعدد', width: 2000,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 500, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 900, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1300, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1700, y: GROUND_Y, width: 300, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 600, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1000, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1400, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1800, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 450, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1050, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1750, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1900, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 350, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
+                    { pivotX: 750, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI },
+                    { pivotX: 1150, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI / 2 },
+                    { pivotX: 1550, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI * 1.5 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(15), desc: 'غلتان + آونگ + یخ', width: 2000,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 500, y: GROUND_Y, width: 300, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 900, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1400, y: GROUND_Y, width: 600, height: GROUND_HEIGHT, type: 'ice' }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 700, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1100, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1700, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 600, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1000, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1850, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 400, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.033, phase: 0 },
+                    { pivotX: 1100, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2.2, speed: 0.033, phase: Math.PI }
+                ],
+                rollingBalls: [
+                    { startX: 950, endX: 1250, y: GROUND_Y - 5, radius: 50, speed: 3.3, direction: 1, currentX: 950, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(16), desc: 'پرتگاه + آونگ + مثلث', width: 2000,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 600, height: GROUND_HEIGHT },
+                    { x: 750, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1300, y: GROUND_Y, width: 700, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 450, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 900, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1500, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1800, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1900, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 1900, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 600, width: 150, depth: 230, leftSlope: { x: 600, width: 50 }, rightSlope: { x: 700, width: 50 } },
+                pendulums: [
+                    { pivotX: 500, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
+                    { pivotX: 1050, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI },
+                    { pivotX: 1600, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI / 2 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(17), desc: 'دو غلتان + چاله', width: 2200,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 500, height: GROUND_HEIGHT },
+                    { x: 600, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 1600, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 400, y: GROUND_Y - 30, radius: 30 },
+                    { x: 750, y: GROUND_Y - 30, radius: 30 },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1250, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1400, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1800, y: GROUND_Y - 30, radius: 30 },
+                    { x: 2000, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 150, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 750, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1900, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 2100, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 2100, y: GROUND_Y - 50, width: 40, height: 50 },
+                rollingBalls: [
+                    { startX: 650, endX: 950, y: GROUND_Y - 5, radius: 50, speed: 3.3, direction: 1, currentX: 650, rotation: 0 },
+                    { startX: 1650, endX: 2000, y: GROUND_Y - 5, radius: 50, speed: 3.5, direction: 1, currentX: 1650, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(18), desc: 'همه موانع (سخت)', width: 2400,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 400, height: GROUND_HEIGHT },
+                    { x: 400, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 700, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1100, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1400, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1800, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 150, y: GROUND_Y - 30, radius: 30 },
+                    { x: 350, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 550, y: GROUND_Y - 30, radius: 30 },
+                    { x: 850, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1500, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 2100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 2300, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 100, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 350, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 600, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 900, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1200, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1500, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1800, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 2100, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 2300, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 600, width: 100, depth: 230, leftSlope: { x: 600, width: 40 }, rightSlope: { x: 660, width: 40 } },
+                pendulums: [
+                    { pivotX: 500, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: 0 },
+                    { pivotX: 1300, pivotY: 0, ropeLength: 200, ballRadius: 35, swingAngle: Math.PI / 2, speed: 0.035, phase: Math.PI }
+                ],
+                rollingBalls: [
+                    { startX: 1450, endX: 1700, y: GROUND_Y - 5, radius: 50, speed: 3.5, direction: 1, currentX: 1450, rotation: 0 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(19), desc: 'موانع متراکم', width: 2400,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 300, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 600, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 900, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1200, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 1500, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1800, y: GROUND_Y, width: 600, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 100, y: GROUND_Y - 30, radius: 30 },
+                    { x: 250, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 450, y: GROUND_Y - 30, radius: 30 },
+                    { x: 700, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 950, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1350, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1600, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 2100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 2300, y: GROUND_Y - 30, radius: 30 }
+                ],
+                coins: [
+                    { x: 100, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 350, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 600, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1100, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 2000, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 2250, y: GROUND_Y - 120, radius: 8, collected: false }
+                ],
+                goal: { x: 2300, y: GROUND_Y - 50, width: 40, height: 50 },
+                pendulums: [
+                    { pivotX: 200, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.038, phase: 0 },
+                    { pivotX: 700, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.038, phase: Math.PI },
+                    { pivotX: 1200, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.038, phase: Math.PI / 2 },
+                    { pivotX: 1700, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.038, phase: Math.PI * 1.5 }
+                ]
+            },
+            {
+                name: 'مرحله ' + toPersianNumber(20), desc: 'غول مرحله آخر!', width: 2600,
+                platforms: [
+                    { x: 0, y: GROUND_Y, width: 300, height: GROUND_HEIGHT },
+                    { x: 300, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 600, y: GROUND_Y, width: 250, height: GROUND_HEIGHT },
+                    { x: 950, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1250, y: GROUND_Y, width: 250, height: GROUND_HEIGHT },
+                    { x: 1600, y: GROUND_Y, width: 200, height: GROUND_HEIGHT, type: 'ice' },
+                    { x: 1900, y: GROUND_Y, width: 700, height: GROUND_HEIGHT }
+                ],
+                obstacles: [
+                    { x: 100, y: GROUND_Y - 30, radius: 30 },
+                    { x: 250, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 450, y: GROUND_Y - 30, radius: 30 },
+                    { x: 700, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 900, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1100, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1350, y: GROUND_Y - 30, radius: 30 },
+                    { x: 1500, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 1750, y: GROUND_Y - 30, radius: 30 },
+                    { x: 2000, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' },
+                    { x: 2200, y: GROUND_Y - 30, radius: 30 },
+                    { x: 2400, y: GROUND_Y - 40, width: 60, height: 40, type: 'triangle' }
+                ],
+                coins: [
+                    { x: 100, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 350, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 600, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 850, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1100, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 1400, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 1700, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 2000, y: GROUND_Y - 150, radius: 8, collected: false },
+                    { x: 2250, y: GROUND_Y - 120, radius: 8, collected: false },
+                    { x: 2500, y: GROUND_Y - 150, radius: 8, collected: false }
+                ],
+                goal: { x: 2500, y: GROUND_Y - 50, width: 40, height: 50 },
+                pit: { x: 500, width: 100, depth: 230, leftSlope: { x: 500, width: 40 }, rightSlope: { x: 560, width: 40 } },
+                pendulums: [
+                    { pivotX: 400, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.04, phase: 0 },
+                    { pivotX: 1000, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.04, phase: Math.PI },
+                    { pivotX: 1500, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.04, phase: Math.PI / 2 },
+                    { pivotX: 2100, pivotY: 0, ropeLength: 180, ballRadius: 32, swingAngle: Math.PI / 2, speed: 0.04, phase: Math.PI * 1.5 }
+                ],
+                rollingBalls: [
+                    { startX: 1300, endX: 1550, y: GROUND_Y - 5, radius: 50, speed: 3.5, direction: 1, currentX: 1300, rotation: 0 },
+                    { startX: 1950, endX: 2300, y: GROUND_Y - 5, radius: 50, speed: 3.8, direction: 1, currentX: 1950, rotation: 0 }
+                ]
+            }
+        ];
+
+        const keys = {};
+        let jumpPressed = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!jumpPressed) { jumpPressed = true; jump(); }
+            }
+            keys[e.code] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+            if (e.code === 'Space') jumpPressed = false;
+        });
+
+        canvas.addEventListener('click', () => { initAudio(); if (gameState === 'playing') jump(); });
+        canvas.addEventListener('touchstart', (e) => {
+            initAudio();
+            if (gameState === 'playing') { e.preventDefault(); jump(); }
+        });
+
+        function jump() {
+            if (gameState === 'playing' && !player.isJumping && !player.isDead) {
+                player.vy = JUMP_FORCE;
+                player.isJumping = true;
+                playSound('jump');
+                spawnParticles(player.x + 15, player.y + player.height, '#8B7355', 5, 2);
+            }
+        }
+
+        function buildMainMenu() {
+            document.getElementById('menuCoins').textContent = '🪙 سکه: ' + toPersianNumber(totalCoins);
+            
+            // ✅ نمایش درصد پیشرفت
+            const completedLevels = Object.values(levelProgress).filter(status => status === 'completed').length;
+            const progressPercent = Math.round((completedLevels / TOTAL_LEVELS) * 100);
+            
+            const menuLevels = document.getElementById('menuLevels');
+            menuLevels.innerHTML = '';
+
+            const startLevel = (currentSeason - 1) * LEVELS_PER_SEASON;
+            const endLevel = currentSeason * LEVELS_PER_SEASON;
+
+            for (let i = startLevel; i < endLevel; i++) {
+                const level = levels[i];
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+
+                const status = levelProgress[i];
+                if (status === 'locked') btn.classList.add('locked');
+                else if (status === 'completed') btn.classList.add('completed');
+                else if (status === 'current') btn.classList.add('current');
+
+                let statusIcon = '', statusText = '';
+                if (status === 'locked') { statusIcon = '🔒'; statusText = 'قفل'; }
+                else if (status === 'completed') { statusIcon = '✅'; statusText = 'تکمیل'; }
+                else { statusIcon = '▶️'; statusText = 'شروع'; }
+
+                // ✅ نمایش صحیح نام مرحله با اعداد فارسی
+                btn.innerHTML = `
+                    <div class="level-num">${statusIcon}</div>
+                    <div>${level.name}</div>
+                    <div class="level-desc">${level.desc}</div>
+                    <div class="level-status">${statusText}</div>
+                `;
+
+                if (status !== 'locked') {
+                    btn.onclick = () => { initAudio(); startLevelGame(i); };
+                }
+
+                menuLevels.appendChild(btn);
+            }
+            
+            // بررسی جایزه روزانه
+            checkDailyReward();
+        }
+
+        function showMainMenu() {
+            gameState = 'menu';
+            stopMusic();
+            document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('gameUI').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('gameInstructions').style.display = 'none';
+            hideMessage();
+            buildMainMenu();
+        }
+
+        function startLevelGame(levelIndex) {
+            currentLevel = levelIndex;
+            const level = levels[levelIndex];
+            levelWidth = level.width;
+
+            player.x = 50;
+            player.y = GROUND_Y - 60;
+            player.vx = 0;
+            player.vy = 0;
+            player.targetVx = 0;
+            player.smoothVx = 0;
+            player.isJumping = false;
+            player.isDead = false;
+            player.deathTimer = 0;
+            player.onIce = false;
+            cameraX = 0;
+            gameState = 'playing';
+            gameTime = 0;
+            levelCoins = 0;
+            particles = [];
+
+            if (level.coins) {
+                for (const coin of level.coins) coin.collected = false;
+            }
+
+            if (level.rollingBalls) {
+                for (const ball of level.rollingBalls) {
+                    ball.currentX = ball.startX;
+                    ball.direction = 1;
+                    ball.rotation = 0;
+                }
+            }
+
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('gameUI').style.display = 'flex';
+            document.getElementById('backBtn').style.display = 'block';
+            document.getElementById('gameInstructions').style.display = 'block';
+            document.getElementById('levelInfo').textContent = level.name;
+            updateUI();
+            hideMessage();
+            
+            // پخش موسیقی فصل مربوطه
+            playSeasonMusic(currentSeason);
+        }
+
+        function updateUI() {
+            document.getElementById('scoreInfo').textContent = 'امتیاز: ' + toPersianNumber(score);
+            document.getElementById('coinInfo').textContent = '🪙 سکه: ' + toPersianNumber(totalCoins) + ' (این مرحله: ' + toPersianNumber(levelCoins) + ')';
+            
+            // ✅ محاسبه و نمایش درصد پیشرفت
+            const completedLevels = Object.values(levelProgress).filter(status => status === 'completed').length;
+            const progressPercent = Math.round((completedLevels / TOTAL_LEVELS) * 100);
+            document.getElementById('progressInfo').textContent = 'پیشرفت: ' + toPersianNumber(progressPercent) + '%';
+        }
+
+        function checkCollision(player, obstacle) {
+            if (obstacle.type === 'triangle') {
+                const cx = obstacle.x + obstacle.width / 2;
+                const cy = obstacle.y + obstacle.height / 2;
+                const px = player.x + player.width / 2;
+                const py = player.y + player.height / 2;
+                return Math.sqrt((px - cx) ** 2 + (py - cy) ** 2) < (obstacle.width / 2 + 10);
+            } else {
+                const px = player.x + player.width / 2;
+                const py = player.y + player.height / 2;
+                return Math.sqrt((px - obstacle.x) ** 2 + (py - obstacle.y) ** 2) < (obstacle.radius + 15);
+            }
+        }
+
+        function checkRollingBallCollision(player, ball) {
+            const px = player.x + player.width / 2;
+            const py = player.y + player.height / 2;
+            return Math.sqrt((px - ball.currentX) ** 2 + (py - ball.y) ** 2) < (ball.radius + 15);
+        }
+
+        function checkPendulumCollision(player, pendulum, time) {
+            const angle = pendulum.swingAngle * Math.sin(time * pendulum.speed + pendulum.phase);
+            const ballX = pendulum.pivotX + Math.sin(angle) * pendulum.ropeLength;
+            const ballY = pendulum.pivotY + Math.cos(angle) * pendulum.ropeLength;
+
+            const px = player.x + player.width / 2;
+            const py = player.y + player.height / 2;
+            const distance = Math.sqrt((px - ballX) ** 2 + (py - ballY) ** 2);
+
+            if (distance < (pendulum.ballRadius + 30)) return true;
+
+            const playerBottom = player.y + player.height;
+            const dangerZoneX = Math.abs(px - pendulum.pivotX);
+            const dangerZoneY = ballY - playerBottom;
+
+            if (dangerZoneX < 40 && dangerZoneY < 50 && dangerZoneY > -20) return true;
+
+            return false;
+        }
+
+        function checkPlatformCollision() {
+            const level = levels[currentLevel];
+            let onPlatform = false;
+            player.onIce = false;
+
+            for (const platform of level.platforms) {
+                if (player.x + player.width > platform.x && player.x < platform.x + platform.width) {
+                    if (player.y + player.height >= platform.y &&
+                        player.y + player.height <= platform.y + 35 && player.vy >= 0) {
+                        player.y = platform.y - player.height;
+                        player.vy = 0;
+                        player.isJumping = false;
+                        onPlatform = true;
+                        if (platform.type === 'ice') {
+                            player.onIce = true;
+                        }
+                    }
+                }
+            }
+            return onPlatform;
+        }
+
+        function killPlayer(reason) {
+            if (player.isDead) return;
+            player.isDead = true;
+            player.deathTimer = 60;
+            player.vy = -5;
+            playSound('death');
+            spawnParticles(player.x + 15, player.y + 30, '#E74C3C', 10, 3);
+
+            setTimeout(() => {
+                gameState = 'lost';
+                showMessage('💀 باختی!', reason + ' امتیاز: ' + toPersianNumber(score) + ' | سکه این مرحله: ' + toPersianNumber(levelCoins), 'تلاش دوباره', () => {
+                    startLevelGame(currentLevel);
+                });
+            }, 600);
+        }
+
+        function update() {
+            if (gameState !== 'playing') { updateParticles(); return; }
+
+            gameTime++;
+            const level = levels[currentLevel];
+
+            // ✅ انیمیشن دویدن نرم‌تر با smoothing
+            let targetVx = 0;
+            if (keys['ArrowRight'] || keys['KeyD']) { targetVx = PLAYER_SPEED; player.facingRight = true; }
+            if (keys['ArrowLeft'] || keys['KeyA']) { targetVx = -PLAYER_SPEED; player.facingRight = false; }
+
+            // استفاده از interpolation برای حرکت نرم‌تر
+            const smoothing = player.onIce ? 0.04 : 0.15;
+            player.smoothVx += (targetVx - player.smoothVx) * smoothing;
+            
+            if (player.onIce) {
+                if (Math.abs(player.smoothVx) > 1 && Math.random() < 0.3) {
+                    spawnParticles(player.x + 15, player.y + player.height, '#AED6F1', 1, 1);
+                }
+            }
+
+            player.x += player.smoothVx;
+            if (Math.abs(player.smoothVx) > 0.5 && !player.isJumping) player.animFrame++;
+
+            player.vy += GRAVITY;
+            player.y += player.vy;
+            checkPlatformCollision();
+
+            if (level.pit) {
+                const pit = level.pit;
+                const playerCenterX = player.x + player.width / 2;
+                const playerBottom = player.y + player.height;
+                if (playerCenterX > pit.x + 10 && playerCenterX < pit.x + pit.width - 10) {
+                    if (playerBottom > GROUND_Y + 20) { killPlayer('تو پرتگاه افتادی!'); return; }
+                }
+            }
+
+            if (level.coins) {
+                for (const coin of level.coins) {
+                    if (!coin.collected) {
+                        const px = player.x + player.width / 2;
+                        const py = player.y + player.height / 2;
+                        if (Math.sqrt((px - coin.x) ** 2 + (py - coin.y) ** 2) < coin.radius + 12) {
+                            coin.collected = true;
+                            levelCoins++;
+                            playSound('coin');
+                            spawnParticles(coin.x, coin.y, '#FFD700', 6, 3);
+                            updateUI();
+                        }
+                    }
+                }
+            }
+
+            const goal = level.goal;
+            if (player.x >= goal.x - 20 && player.x <= goal.x + 150) {
+                if (!completedLevelsData[currentLevel]) {
+                    completedLevelsData[currentLevel] = { completed: false, coinsCollected: 0 };
+                }
+                const levelData = completedLevelsData[currentLevel];
+
+                if (!levelData.completed) {
+                    score += 100;
+                    totalCoins += levelCoins;
+                    levelData.completed = true;
+                    levelData.coinsCollected = levelCoins;
+                    playSound('win');
+                    spawnParticles(goal.x + 20, goal.y + 20, '#FFD700', 20, 5);
+                    spawnParticles(goal.x + 20, goal.y + 20, '#2ECC40', 15, 4);
+                } else {
+                    playSound('win');
+                }
+
+                levelProgress[currentLevel] = 'completed';
+                if (currentLevel + 1 < levels.length && levelProgress[currentLevel + 1] === 'locked') {
+                    levelProgress[currentLevel + 1] = 'current';
+                }
+
+                saveProgress();
+                gameState = 'levelComplete';
+
+                if (currentLevel + 1 >= levels.length) {
+                    setTimeout(() => {
+                        showMessage('🎉 تبریک!', 'همه 20 مرحله رو رد کردی! امتیاز: ' + toPersianNumber(score) + ' | کل سکه‌ها: ' + toPersianNumber(totalCoins), 'منوی اصلی', () => { showMainMenu(); });
+                    }, 500);
+                } else {
+                    setTimeout(() => { showLevelCompleteMessage(!levelData.completed); }, 500);
+                }
+                return;
+            }
+
+            if (player.y > 550) { killPlayer('از صفحه افتادی!'); return; }
+
+            for (const obstacle of level.obstacles) {
+                if (checkCollision(player, obstacle)) { killPlayer('به مانع برخورد کردی!'); return; }
+            }
+
+            if (level.pendulums) {
+                for (const pendulum of level.pendulums) {
+                    if (checkPendulumCollision(player, pendulum, gameTime)) { killPlayer('به گوی آونگی برخورد کردی!'); return; }
+                }
+            }
+
+            if (level.rollingBalls) {
+                for (const ball of level.rollingBalls) {
+                    ball.currentX += ball.speed * ball.direction;
+                    ball.rotation += ball.direction * 0.15;
+                    if (ball.currentX >= ball.endX) ball.direction = -1;
+                    else if (ball.currentX <= ball.startX) ball.direction = 1;
+                    if (checkRollingBallCollision(player, ball)) { killPlayer('دایره قرمز بهت برخورد کرد!'); return; }
+                }
+            }
+
+            const targetCameraX = player.x - 200;
+            cameraX += (targetCameraX - cameraX) * 0.1;
+            if (cameraX < 0) cameraX = 0;
+            if (cameraX > levelWidth - 900) cameraX = levelWidth - 900;
+            if (player.x < 0) player.x = 0;
+
+            updateParticles();
+        }
+
+        function showLevelCompleteMessage(isFirstTime) {
+            const title = '✅ مرحله ' + toPersianNumber(currentLevel + 1) + ' رد شد!';
+            const text = isFirstTime
+                ? 'امتیاز +100 | سکه این مرحله: +' + toPersianNumber(levelCoins) + ' | کل سکه‌ها: ' + toPersianNumber(totalCoins)
+                : 'این مرحله قبلاً تکمیل شده بود | کل سکه‌ها: ' + toPersianNumber(totalCoins);
+
+            document.getElementById('msgTitle').textContent = title;
+            document.getElementById('msgText').textContent = text;
+            document.getElementById('msgButtons').innerHTML = `
+                <button class="btn-next" onclick="goToNextLevel()">مرحله بعد ▶️</button>
+                <button class="btn-menu" onclick="showMainMenu()">🏠 منوی اصلی</button>
+            `;
+            document.getElementById('messageOverlay').classList.add('active');
+        }
+
+        function goToNextLevel() {
+            hideMessage();
+            if (currentLevel + 1 < levels.length) startLevelGame(currentLevel + 1);
+        }
+
+        function getSkinAppearance() {
+            return skins.find(s => s.id === equippedSkin) || null;
+        }
+
+        function drawArgentinaJersey(bodyBob, walkOffset, legSpread, legBend, armAngle, dir, isDead) {
+            const jerseyColor = '#75AADB';
+            const stripeColor = '#FFFFFF';
+            const shortsColor = '#1A1A2E';
+            const skinColor = '#FDBCB4';
+            const shoeColor = '#1A1A1A';
+
+            ctx.strokeStyle = skinColor;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            if (isDead) {
+                ctx.beginPath(); ctx.moveTo(-5, 50 - bodyBob); ctx.lineTo(-8, 58 - bodyBob); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(5, 50 - bodyBob); ctx.lineTo(8, 58 - bodyBob); ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.moveTo(-5, 50 - bodyBob); ctx.lineTo(-5 - legSpread * 0.3 + walkOffset * 0.3, 58 - legBend); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(5, 50 - bodyBob); ctx.lineTo(5 + legSpread * 0.3 - walkOffset * 0.3, 58 - legBend); ctx.stroke();
+            }
+
+            ctx.fillStyle = shoeColor;
+            if (!isDead) {
+                ctx.fillRect(-8 - legSpread * 0.3 + walkOffset * 0.3, 56 - legBend, 6, 4);
+                ctx.fillRect(2 + legSpread * 0.3 - walkOffset * 0.3, 56 - legBend, 6, 4);
+            } else {
+                ctx.fillRect(-11, 56 - bodyBob, 6, 4);
+                ctx.fillRect(5, 56 - bodyBob, 6, 4);
+            }
+
+            ctx.fillStyle = shortsColor;
+            ctx.fillRect(-11, 42 - bodyBob, 9, 9);
+            ctx.fillRect(2, 42 - bodyBob, 9, 9);
+
+            ctx.fillStyle = jerseyColor;
+            ctx.fillRect(-13, 24 - bodyBob, 26, 19);
+            ctx.fillRect(-17, 24 - bodyBob, 6, 10);
+            ctx.fillRect(11, 24 - bodyBob, 6, 10);
+
+            ctx.fillStyle = stripeColor;
+            ctx.fillRect(-9, 24 - bodyBob, 5, 19);
+            ctx.fillRect(4, 24 - bodyBob, 5, 19);
+
+            ctx.fillStyle = '#1A1A2E';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('10', 0, 33 - bodyBob);
+
+            ctx.strokeStyle = skinColor;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            ctx.save();
+            ctx.translate(0, 28 - bodyBob);
+            ctx.rotate(armAngle * dir);
+            ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-14 - 10 * dir + walkOffset * 0.2, 12); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(14 + 10 * dir - walkOffset * 0.2, 12); ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawMessiHead(bodyBob, isDead) {
+            ctx.fillStyle = '#2C1810';
+            ctx.beginPath();
+            ctx.ellipse(0, 4 - bodyBob, 13, 9, 0, Math.PI, 0);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(-10, 4 - bodyBob);
+            ctx.quadraticCurveTo(-8, 8 - bodyBob, -5, 6 - bodyBob);
+            ctx.quadraticCurveTo(0, 3 - bodyBob, 5, 6 - bodyBob);
+            ctx.quadraticCurveTo(8, 8 - bodyBob, 10, 4 - bodyBob);
+            ctx.fill();
+
+            ctx.fillStyle = '#2C1810';
+            ctx.beginPath();
+            ctx.moveTo(-10, 16 - bodyBob);
+            ctx.quadraticCurveTo(-11, 22 - bodyBob, -6, 24 - bodyBob);
+            ctx.quadraticCurveTo(0, 26 - bodyBob, 6, 24 - bodyBob);
+            ctx.quadraticCurveTo(11, 22 - bodyBob, 10, 16 - bodyBob);
+            ctx.quadraticCurveTo(8, 20 - bodyBob, 0, 21 - bodyBob);
+            ctx.quadraticCurveTo(-8, 20 - bodyBob, -10, 16 - bodyBob);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(-7, 17 - bodyBob);
+            ctx.quadraticCurveTo(-3, 19 - bodyBob, 0, 18 - bodyBob);
+            ctx.quadraticCurveTo(3, 19 - bodyBob, 7, 17 - bodyBob);
+            ctx.quadraticCurveTo(3, 17 - bodyBob, 0, 17 - bodyBob);
+            ctx.quadraticCurveTo(-3, 17 - bodyBob, -7, 17 - bodyBob);
+            ctx.fill();
+        }
+
+        function drawStickFigure(x, y, facingRight, frame, isJumping, isDead, deathTimer) {
+            ctx.save();
+            ctx.translate(x + 15, y);
+
+            if (isDead) ctx.translate(0, (60 - deathTimer) * 0.5);
+
+            const dir = facingRight ? 1 : -1;
+
+            let bodyBob = 0;
+            if (!isJumping && !isDead && Math.abs(player.smoothVx) > 0.5) {
+                bodyBob = Math.abs(Math.sin(frame * 0.4)) * 3;
+            }
+
+            let legSpread = 8, legBend = 0, armAngle = 0;
+            if (isJumping && !isDead) { legSpread = 4; legBend = 8; armAngle = -0.5; }
+            else if (!isJumping && !isDead && Math.abs(player.smoothVx) > 0.5) { legSpread = 8 + Math.sin(frame * 0.4) * 4; }
+
+            const walkOffset = Math.sin(frame * 0.4) * 6;
+
+            if (!isDead) {
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, 60, 15, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const skin = getSkinAppearance();
+            const isArgentina = skin && skin.id === 'argentina';
+
+            if (isArgentina) {
+                drawArgentinaJersey(bodyBob, walkOffset, legSpread, legBend, armAngle, dir, isDead);
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 12 - bodyBob, 12, 0, Math.PI * 2);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fill();
+
+            if (isArgentina) {
+                drawMessiHead(bodyBob, isDead);
+            }
+
+            if (skin && !isDead) {
+                if (skin.id === 'redhat') {
+                    ctx.fillStyle = '#C0392B';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 2 - bodyBob, 18, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.beginPath();
+                    ctx.moveTo(-12, 2 - bodyBob);
+                    ctx.quadraticCurveTo(-13, -10 - bodyBob, -6, -14 - bodyBob);
+                    ctx.quadraticCurveTo(0, -17 - bodyBob, 6, -14 - bodyBob);
+                    ctx.quadraticCurveTo(13, -10 - bodyBob, 12, 2 - bodyBob);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#F1C40F';
+                    ctx.fillRect(-13, 0 - bodyBob, 26, 3);
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(-4, -6 - bodyBob, 4, 6, -0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (skin.id === 'sunglasses') {
+                    ctx.fillStyle = '#2C3E50';
+                    ctx.fillRect(-8, 7 - bodyBob, 7, 5);
+                    ctx.fillRect(1, 7 - bodyBob, 7, 5);
+                    ctx.fillRect(-1, 8 - bodyBob, 2, 3);
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.fillRect(-6, 8 - bodyBob, 3, 2);
+                    ctx.fillRect(3, 8 - bodyBob, 3, 2);
+                } else if (skin.id === 'crown') {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.moveTo(-10, 3 - bodyBob);
+                    ctx.lineTo(-10, -5 - bodyBob);
+                    ctx.lineTo(-5, 0 - bodyBob);
+                    ctx.lineTo(0, -7 - bodyBob);
+                    ctx.lineTo(5, 0 - bodyBob);
+                    ctx.lineTo(10, -5 - bodyBob);
+                    ctx.lineTo(10, 3 - bodyBob);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#B8860B';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.beginPath(); ctx.arc(0, -3 - bodyBob, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#3498DB';
+                    ctx.beginPath(); ctx.arc(-6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(6, -1 - bodyBob, 1.5, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            if (isDead) {
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(-6, 8 - bodyBob); ctx.lineTo(-2, 12 - bodyBob); ctx.moveTo(-2, 8 - bodyBob); ctx.lineTo(-6, 12 - bodyBob); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(2, 8 - bodyBob); ctx.lineTo(6, 12 - bodyBob); ctx.moveTo(6, 8 - bodyBob); ctx.lineTo(2, 12 - bodyBob); ctx.stroke();
+            } else {
+                if (!skin || skin.id !== 'sunglasses') {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(-5 * dir, 9 - bodyBob, 3, 3);
+                    ctx.fillRect(2 * dir, 9 - bodyBob, 3, 3);
+                }
+                ctx.beginPath();
+                ctx.arc(0, 14 - bodyBob, 5, 0, Math.PI);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.fillStyle = '#6B8DB5';
+            ctx.fillRect(0, 0, 900, 500);
+            ctx.fillStyle = '#2ECC40';
+            ctx.fillRect(0, GROUND_Y + GROUND_HEIGHT, 900, 500);
+
+            if (gameState === 'menu') return;
+
+            const level = levels[currentLevel];
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            for (const platform of level.platforms) {
+                if (platform.type === 'ice') {
+                    const gradient = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + 20);
+                    gradient.addColorStop(0, '#AED6F1');
+                    gradient.addColorStop(1, '#85C1E9');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.moveTo(platform.x, platform.y);
+                    ctx.lineTo(platform.x + platform.width, platform.y);
+                    ctx.lineTo(platform.x + platform.width + 30, platform.y + platform.height);
+                    ctx.lineTo(platform.x - 30, platform.y + platform.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctx.fillRect(platform.x + 20, platform.y + 5, 30, 3);
+                    ctx.fillRect(platform.x + 80, platform.y + 8, 40, 3);
+                    ctx.fillRect(platform.x + 150, platform.y + 5, 25, 3);
+                } else {
+                    ctx.fillStyle = '#B87D5E';
+                    ctx.beginPath();
+                    ctx.moveTo(platform.x, platform.y);
+                    ctx.lineTo(platform.x + platform.width, platform.y);
+                    ctx.lineTo(platform.x + platform.width + 30, platform.y + platform.height);
+                    ctx.lineTo(platform.x - 30, platform.y + platform.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#C98B6B';
+                    ctx.fillRect(platform.x, platform.y, platform.width, 5);
+                }
+            }
+
+            if (level.pit) {
+                const pit = level.pit;
+                
+                const leftIceGrad = ctx.createLinearGradient(pit.leftSlope.x, GROUND_Y, pit.leftSlope.x, GROUND_Y + pit.depth);
+                leftIceGrad.addColorStop(0, '#AED6F1');
+                leftIceGrad.addColorStop(1, '#85C1E9');
+                ctx.fillStyle = leftIceGrad;
+                ctx.beginPath();
+                ctx.moveTo(pit.leftSlope.x, GROUND_Y);
+                ctx.lineTo(pit.leftSlope.x + pit.leftSlope.width, GROUND_Y);
+                ctx.lineTo(pit.x + 20, GROUND_Y + pit.depth);
+                ctx.lineTo(pit.x, GROUND_Y + pit.depth);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.fillRect(pit.leftSlope.x + 10, GROUND_Y + 20, 20, 3);
+                ctx.fillRect(pit.leftSlope.x + 15, GROUND_Y + 50, 15, 3);
+
+                const rightIceGrad = ctx.createLinearGradient(pit.x + pit.width - 20, GROUND_Y + pit.depth, pit.rightSlope.x + pit.rightSlope.width, GROUND_Y);
+                rightIceGrad.addColorStop(0, '#85C1E9');
+                rightIceGrad.addColorStop(1, '#AED6F1');
+                ctx.fillStyle = rightIceGrad;
+                ctx.beginPath();
+                ctx.moveTo(pit.x + pit.width - 20, GROUND_Y + pit.depth);
+                ctx.lineTo(pit.x + pit.width, GROUND_Y + pit.depth);
+                ctx.lineTo(pit.rightSlope.x + pit.rightSlope.width, GROUND_Y);
+                ctx.lineTo(pit.rightSlope.x, GROUND_Y);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.fillRect(pit.rightSlope.x + 10, GROUND_Y + 20, 20, 3);
+                ctx.fillRect(pit.rightSlope.x + 15, GROUND_Y + 50, 15, 3);
+
+                ctx.fillStyle = '#808080';
+                ctx.fillRect(pit.x, GROUND_Y, 10, pit.depth);
+                ctx.fillRect(pit.x + pit.width - 10, GROUND_Y, 10, pit.depth);
+                
+                ctx.fillStyle = '#C0C0C0';
+                ctx.fillRect(pit.x + 10, GROUND_Y + 20, pit.width - 20, pit.depth - 20);
+                const gradient = ctx.createLinearGradient(pit.x, GROUND_Y, pit.x, GROUND_Y + pit.depth);
+                gradient.addColorStop(0, 'rgba(0,0,0,0.3)');
+                gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(pit.x + 10, GROUND_Y + 20, pit.width - 20, pit.depth - 20);
+            }
+
+            if (level.pendulums) {
+                for (const pendulum of level.pendulums) {
+                    const angle = pendulum.swingAngle * Math.sin(gameTime * pendulum.speed + pendulum.phase);
+                    const ballX = pendulum.pivotX + Math.sin(angle) * pendulum.ropeLength;
+                    const ballY = pendulum.pivotY + Math.cos(angle) * pendulum.ropeLength;
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(pendulum.pivotX, pendulum.pivotY);
+                    ctx.lineTo(ballX, ballY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(ballX, ballY, pendulum.ballRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#000';
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(ballX - 12, ballY - 12, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                    ctx.fill();
+                }
+            }
+
+            if (level.rollingBalls) {
+                for (const ball of level.rollingBalls) {
+                    ctx.beginPath();
+                    ctx.ellipse(ball.currentX, ball.y + ball.radius - 5, ball.radius * 0.8, 8, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(ball.currentX, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fill();
+                    ctx.strokeStyle = '#C0392B';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.save();
+                    ctx.translate(ball.currentX, ball.y);
+                    ctx.rotate(ball.rotation);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(-ball.radius * 0.6, 0); ctx.lineTo(ball.radius * 0.6, 0); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, -ball.radius * 0.6); ctx.lineTo(0, ball.radius * 0.6); ctx.stroke();
+                    ctx.restore();
+                    ctx.beginPath();
+                    ctx.arc(ball.currentX - 18, ball.y - 18, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                    ctx.fill();
+                }
+            }
+
+            if (level.coins) {
+                for (const coin of level.coins) {
+                    if (!coin.collected) {
+                        const wobble = Math.sin(gameTime * 0.1 + coin.x) * 2;
+                        ctx.save();
+                        ctx.translate(coin.x, coin.y + wobble);
+                        ctx.beginPath();
+                        ctx.arc(0, 0, coin.radius + 4, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(0, 0, coin.radius, 0, Math.PI * 2);
+                        const coinGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, coin.radius);
+                        coinGrad.addColorStop(0, '#FFF8DC');
+                        coinGrad.addColorStop(0.5, '#FFD700');
+                        coinGrad.addColorStop(1, '#B8860B');
+                        ctx.fillStyle = coinGrad;
+                        ctx.fill();
+                        ctx.strokeStyle = '#B8860B';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.fillStyle = '#B8860B';
+                        ctx.font = 'bold 10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('$', 0, 1);
+                        ctx.restore();
+                    }
+                }
+            }
+
+            for (const obstacle of level.obstacles) {
+                if (obstacle.type === 'triangle') {
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x + obstacle.width / 2, obstacle.y);
+                    ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
+                    ctx.lineTo(obstacle.x, obstacle.y + obstacle.height);
+                    ctx.closePath();
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fill();
+                    ctx.strokeStyle = '#C0392B';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(obstacle.x, obstacle.y, obstacle.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fill();
+                    ctx.strokeStyle = '#C0392B';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(obstacle.x - 8, obstacle.y - 8, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.fill();
+                }
+            }
+
+            const goal = level.goal;
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(goal.x + 5, goal.y, 5, goal.height);
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.moveTo(goal.x + 10, goal.y);
+            ctx.lineTo(goal.x + 35, goal.y + 12);
+            ctx.lineTo(goal.x + 10, goal.y + 24);
+            ctx.closePath();
+            ctx.fill();
+
+            drawParticles();
+            drawStickFigure(player.x, player.y, player.facingRight, player.animFrame, player.isJumping, player.isDead, player.deathTimer);
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            if (player.isDead && player.deathTimer > 0) {
+                player.deathTimer--;
+                player.vy += GRAVITY;
+                player.y += player.vy;
+            }
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function showMessage(title, text, btnText, callback) {
+            document.getElementById('msgTitle').textContent = title;
+            document.getElementById('msgText').textContent = text;
+            document.getElementById('msgButtons').innerHTML = `<button id="msgBtn">${btnText}</button>`;
+            document.getElementById('msgBtn').onclick = callback;
+            document.getElementById('messageOverlay').classList.add('active');
+        }
+
+        function hideMessage() {
+            document.getElementById('messageOverlay').classList.remove('active');
+        }
+
+        loadProgress();
+        buildMainMenu();
+        gameLoop();
+    </script>
+</body>
+</html>
